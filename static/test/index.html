@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoVoiceOver — AI Voice-Over Generator for Videos</title>
+  <meta name="description" content="Upload a video, choose a voice + niche, and get an AI voice-over, 5 viral hook options, and SRT subtitles—instantly." />
+
+  <!-- App icons -->
+  <link rel="icon" href="/static/logo.png" />
+  <meta name="theme-color" content="#0B1220" />
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root{
+      --ink:#0b1220;
+      --muted:#64748b;
+      --stroke:rgba(15,23,42,.10);
+      --glass:rgba(255,255,255,.72);
+      --shadow: 0 18px 60px rgba(2,6,23,.12);
+      --shadow2: 0 10px 26px rgba(2,6,23,.10);
+    }
+    html, body { height: 100%; }
+    body{
+      color: var(--ink);
+      background:
+        radial-gradient(1100px 650px at 80% -10%, rgba(99,102,241,.20), transparent 60%),
+        radial-gradient(900px 520px at 10% 0%, rgba(56,189,248,.18), transparent 60%),
+        linear-gradient(180deg, #ffffff, #f6f7fb);
+    }
+    .glass{
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      backdrop-filter: blur(10px) saturate(1.15);
+      -webkit-backdrop-filter: blur(10px) saturate(1.15);
+      box-shadow: var(--shadow);
+    }
+    .glass2{
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow2);
+    }
+    .btn{ transition: transform .12s ease, box-shadow .18s ease, opacity .18s ease; }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); }
+    .focus-ring:focus{
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(99,102,241,.18), 0 1px 2px rgba(0,0,0,.06);
+      border-color: transparent;
+    }
+    .drop-highlight{ background: rgba(99,102,241,.06); border-color: rgba(99,102,241,.55); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .hide{ display:none !important; }
+    .toast{
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: 18px; z-index: 100;
+      padding: 10px 14px; border-radius: 9999px;
+      background: rgba(15,23,42,.92); color: white;
+      box-shadow: 0 18px 50px rgba(2,6,23,.25);
+      opacity: 0; pointer-events: none;
+      transition: opacity .18s ease;
+      font-size: 14px;
+    }
+    .toast[data-show="true"]{ opacity: 1; }
+    .progress{
+      height: 10px; border-radius: 9999px; overflow: hidden;
+      background: rgba(148,163,184,.35);
+      border: 1px solid rgba(148,163,184,.35);
+    }
+    .progress > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(99,102,241,.95), rgba(56,189,248,.95));
+      transition: width .14s ease;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 7px 12px; border-radius: 9999px;
+      background: rgba(255,255,255,.8);
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 10px 24px rgba(2,6,23,.06);
+      font-size: 12px;
+      color: rgba(15,23,42,.75);
+    }
+    .divider{ height: 1px; background: linear-gradient(90deg, transparent, rgba(148,163,184,.55), transparent); }
+  </style>
+</head>
+
+<body class="antialiased">
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Header -->
+  <header class="max-w-7xl mx-auto px-5 pt-7">
+    <div class="glass rounded-2xl px-5 py-4 flex items-center justify-between">
+      <a href="#top" class="flex items-center gap-3">
+        <img src="/static/logo.png" alt="AutoVoiceOver logo" class="w-10 h-10 rounded-xl" />
+        <div class="leading-tight">
+          <div class="font-semibold tracking-tight">AutoVoiceOver</div>
+          <div class="text-xs text-slate-500">AI voice-over for videos</div>
+        </div>
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
+        <a href="#studio" class="hover:text-slate-900">Studio</a>
+        <a href="#how" class="hover:text-slate-900">How it works</a>
+        <a href="#faq" class="hover:text-slate-900">FAQ</a>
+        <a href="#studio" class="btn inline-flex items-center justify-center rounded-full bg-indigo-600 text-white px-4 py-2 shadow-sm hover:opacity-95">
+          Launch Studio
+        </a>
+      </nav>
+      <button id="mobileMenuBtn" class="md:hidden btn rounded-xl px-3 py-2 glass2" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="mobileMenu" class="hide md:hidden mt-3 glass rounded-2xl px-5 py-4 text-sm text-slate-700">
+      <div class="flex flex-col gap-3">
+        <a href="#studio" class="hover:text-slate-950">Studio</a>
+        <a href="#how" class="hover:text-slate-950">How it works</a>
+        <a href="#faq" class="hover:text-slate-950">FAQ</a>
+        <a href="#studio" class="btn inline-flex items-center justify-center rounded-full bg-indigo-600 text-white px-4 py-2 shadow-sm hover:opacity-95">
+          Launch Studio
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <main id="top" class="max-w-7xl mx-auto px-5 pb-20">
+    <section class="mt-8 glass rounded-3xl overflow-hidden">
+      <div class="px-6 py-10 md:px-10 md:py-14">
+        <div class="flex flex-wrap gap-3 items-center">
+          <span class="badge"><span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span> 100% instant results</span>
+          <span class="badge"><span class="inline-block w-2 h-2 rounded-full bg-sky-400"></span> Voice-over + 5 hooks + SRT</span>
+          <span class="badge"><span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span> Works for every niche</span>
+        </div>
+
+        <div class="mt-6 grid md:grid-cols-2 gap-10 items-center">
+          <div>
+            <h1 class="text-4xl md:text-6xl font-semibold tracking-tight leading-[1.03]">
+              Turn any video into a <span class="text-indigo-600">high-retention</span> clip with AI voice-over.
+            </h1>
+            <p class="mt-5 text-slate-600 text-lg leading-relaxed max-w-xl">
+              Upload your video, choose a voice and niche, and get a new version with AI voice-over, plus 5 hook options you can A/B test—along with SRT subtitles.
+            </p>
+            <div class="mt-7 flex flex-wrap gap-3">
+              <a href="#studio" class="btn inline-flex items-center justify-center rounded-full bg-indigo-600 text-white px-6 py-3 shadow-sm hover:opacity-95">
+                Launch Studio
+              </a>
+              <a href="#how" class="btn inline-flex items-center justify-center rounded-full glass2 px-6 py-3">
+                See how it works
+              </a>
+            </div>
+            <div class="mt-6 text-sm text-slate-500">No accounts. No editing skills. Just upload and download.</div>
+          </div>
+
+          <div class="glass2 rounded-2xl p-5 md:p-6">
+            <div class="text-sm text-slate-600">What you’ll get back</div>
+            <div class="mt-3 grid gap-3">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center"><span class="mono text-indigo-600">01</span></div>
+                <div>
+                  <div class="font-medium">AI voice-over audio</div>
+                  <div class="text-sm text-slate-500">Preview & download as MP3</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center"><span class="mono text-sky-600">02</span></div>
+                <div>
+                  <div class="font-medium">Merged MP4 output</div>
+                  <div class="text-sm text-slate-500">Original video + voice mix + offset</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center"><span class="mono text-emerald-600">03</span></div>
+                <div>
+                  <div class="font-medium">SRT subtitles</div>
+                  <div class="text-sm text-slate-500">English subtitles file</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center"><span class="mono text-amber-600">04</span></div>
+                <div>
+                  <div class="font-medium">5 hook lines</div>
+                  <div class="text-sm text-slate-500">Click “Use” to re-render without re-uploading</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5 divider"></div>
+            <div class="mt-5 text-xs text-slate-500 leading-relaxed">
+              Tip: Generate once, then click <span class="mono">Use</span> on any hook to create a new voice-over/video without re-uploading.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Studio -->
+    <section id="studio" class="mt-10 grid lg:grid-cols-2 gap-6 items-start">
+      <!-- Left -->
+      <div class="glass rounded-3xl p-6 md:p-8">
+        <div class="flex items-start justify-between gap-6">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Studio</h2>
+            <p class="mt-2 text-slate-600">Upload a video, choose settings, and generate the output.</p>
+          </div>
+          <div class="text-right text-xs text-slate-500">
+            Endpoint: <span class="mono">POST /upload</span><br/>
+            Apply hook: <span class="mono">POST /apply-hook</span>
+          </div>
+        </div>
+
+        <!-- Dropzone -->
+        <div id="dropZone" class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 md:p-8 text-center cursor-pointer select-none" role="button" tabindex="0" aria-label="Upload video">
+          <input id="videoFile" type="file" accept="video/*" class="hidden" />
+          <div class="mx-auto w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"/>
+            </svg>
+          </div>
+          <div class="mt-3 font-medium">Drop a video here</div>
+          <div class="mt-1 text-sm text-slate-500">or click to browse</div>
+
+          <div id="fileMeta" class="mt-4 hide text-sm text-slate-600">
+            <div><span class="font-medium">Selected:</span> <span id="fileName" class="mono"></span></div>
+            <div><span class="font-medium">Size:</span> <span id="fileSize" class="mono"></span></div>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="mt-6 grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium text-slate-700" for="niche">Niche</label>
+            <select id="niche" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring">
+              <option value="business">Business</option>
+              <option value="education">Education</option>
+              <option value="motivation">Motivation</option>
+              <option value="fitness">Fitness</option>
+              <option value="tech">Tech</option>
+              <option value="gaming">Gaming</option>
+              <option value="travel">Travel</option>
+              <option value="content" selected>General</option>
+            </select>
+            <p class="mt-1 text-xs text-slate-500">Used to shape the hook style returned by the backend.</p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-slate-700" for="voice">Voice</label>
+            <select id="voice" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring">
+              <option value="male" selected>Male</option>
+              <option value="female">Female</option>
+              <option value="energetic">Energetic</option>
+              <option value="calm">Calm</option>
+            </select>
+            <p class="mt-1 text-xs text-slate-500">Matches backend values exactly.</p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-slate-700" for="offset">Offset (seconds)</label>
+            <input id="offset" type="number" step="0.1" value="0" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring" />
+            <p class="mt-1 text-xs text-slate-500">Delays voice start (supports 0.3 or 0,3 on backend).</p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-slate-700" for="mix">Voice Mix</label>
+            <input id="mix" type="range" min="0" max="100" value="80" class="mt-3 w-full" />
+            <div class="mt-1 text-xs text-slate-500">
+              <span class="font-medium">AI voice:</span> <span id="mixLabel" class="mono">80</span>%
+              <span class="ml-2 text-slate-400">(0 = full original, 100 = full AI voice)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          <button id="processBtn" class="btn rounded-full bg-indigo-600 text-white px-6 py-3 shadow-sm hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Generate Output
+          </button>
+          <button id="resetBtn" class="btn rounded-full glass2 px-6 py-3">Reset</button>
+          <div class="ml-auto text-xs text-slate-500">Tip: short clips (10–20s) process fastest.</div>
+        </div>
+
+        <!-- Progress -->
+        <div class="mt-6 glass2 rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">Status</div>
+            <div id="statusText" class="text-sm text-slate-600">Idle</div>
+          </div>
+          <div class="mt-3 progress" aria-label="Upload progress">
+            <div id="progressBar"></div>
+          </div>
+          <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+            <div id="progressPct" class="mono">0%</div>
+            <div id="progressMB" class="mono">0 MB / 0 MB</div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">
+            If you see <span class="mono">405 Method Not Allowed</span>, your backend route isn’t accepting POST.
+            This frontend sends a <span class="mono">POST</span> to <span class="mono">/upload</span>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="glass rounded-3xl p-6 md:p-8">
+        <h3 class="text-xl font-semibold tracking-tight">Results</h3>
+        <p class="mt-2 text-slate-600">Your generated files and hook options will appear here after processing.</p>
+
+        <!-- Hooks -->
+        <div class="mt-6 glass2 rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-sm font-medium">Hook options (A/B test)</div>
+            <button id="copySelectedBtn" class="btn rounded-full px-4 py-2 bg-slate-900 text-white text-xs hover:opacity-95 disabled:opacity-40" disabled>
+              Copy selected hook
+            </button>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">
+            Select a hook and click <span class="mono">Use</span> to generate a new voice-over/video without re-uploading.
+          </div>
+
+          <div id="hooksList" class="mt-4 space-y-2">
+            <div class="text-sm text-slate-400">No hooks yet.</div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button id="copyAllHooksBtn" class="btn rounded-full px-4 py-2 glass2 text-xs disabled:opacity-40" disabled>Copy all hooks</button>
+            <button id="exportHooksJsonBtn" class="btn rounded-full px-4 py-2 glass2 text-xs disabled:opacity-40" disabled>Export JSON</button>
+            <button id="exportHooksCsvBtn" class="btn rounded-full px-4 py-2 glass2 text-xs disabled:opacity-40" disabled>Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Media previews -->
+        <div class="mt-6 grid gap-4">
+          <div class="glass2 rounded-2xl p-4">
+            <div class="text-sm font-medium">Video preview</div>
+            <video id="outVideo" class="mt-3 w-full rounded-xl bg-black" controls playsinline></video>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <a id="downloadVideo" class="btn rounded-full bg-indigo-600 text-white px-5 py-2 text-sm hover:opacity-95 inline-flex items-center gap-2 pointer-events-none opacity-40" href="#" download>
+                Download MP4
+              </a>
+              <a id="downloadSrt" class="btn rounded-full glass2 px-5 py-2 text-sm inline-flex items-center gap-2 pointer-events-none opacity-40" href="#" download>
+                Download SRT
+              </a>
+            </div>
+          </div>
+
+          <div class="glass2 rounded-2xl p-4">
+            <div class="text-sm font-medium">Voice-over preview</div>
+            <audio id="outAudio" class="mt-3 w-full" controls></audio>
+            <div class="mt-3">
+              <a id="downloadAudio" class="btn rounded-full glass2 px-5 py-2 text-sm inline-flex items-center gap-2 pointer-events-none opacity-40" href="#" download>
+                Download MP3
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Debug -->
+        <div class="mt-6 text-xs text-slate-500">
+          <div class="font-medium text-slate-600">Connection</div>
+          <div class="mt-1">Using API base: <span id="apiBaseLabel" class="mono"></span></div>
+          <div class="mt-1">Tip: if your frontend is hosted elsewhere, add <span class="mono">?api=https://YOUR-DOMAIN</span> to the URL.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How -->
+    <section id="how" class="mt-10 glass rounded-3xl p-6 md:p-10">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">How it works</h2>
+      <div class="mt-6 grid md:grid-cols-3 gap-4">
+        <div class="glass2 rounded-2xl p-5">
+          <div class="mono text-indigo-600 text-sm">Step 1</div>
+          <div class="mt-1 font-medium">Upload a video</div>
+          <div class="mt-1 text-sm text-slate-600">Drag & drop or browse. Any standard video format works.</div>
+        </div>
+        <div class="glass2 rounded-2xl p-5">
+          <div class="mono text-indigo-600 text-sm">Step 2</div>
+          <div class="mt-1 font-medium">Choose voice + niche</div>
+          <div class="mt-1 text-sm text-slate-600">These settings are sent to the backend endpoint.</div>
+        </div>
+        <div class="glass2 rounded-2xl p-5">
+          <div class="mono text-indigo-600 text-sm">Step 3</div>
+          <div class="mt-1 font-medium">Download everything</div>
+          <div class="mt-1 text-sm text-slate-600">MP4 output, MP3 voice preview, SRT subtitles, and 5 hooks.</div>
+        </div>
+      </div>
+      <div class="mt-8 text-sm text-slate-500">
+        Your backend must be running and reachable. For local testing, start your FastAPI server and open this page from the same host.
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="mt-10 glass rounded-3xl p-6 md:p-10">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">FAQ</h2>
+      <div class="mt-6 grid md:grid-cols-2 gap-4">
+        <div class="glass2 rounded-2xl p-5">
+          <div class="font-medium">Why did I get “405 Method Not Allowed” earlier?</div>
+          <div class="mt-2 text-sm text-slate-600">
+            That happens when the server route doesn’t accept POST on <span class="mono">/upload</span>.
+            This frontend sends a POST with <span class="mono">multipart/form-data</span>.
+          </div>
+        </div>
+        <div class="glass2 rounded-2xl p-5">
+          <div class="font-medium">Can I generate voice-over for hook #2–#5?</div>
+          <div class="mt-2 text-sm text-slate-600">
+            Yes. Generate once, then click <span class="mono">Use</span> on any hook. The app will call <span class="mono">POST /apply-hook</span> without re-uploading.
+          </div>
+        </div>
+        <div class="glass2 rounded-2xl p-5">
+          <div class="font-medium">Where do the output files live?</div>
+          <div class="mt-2 text-sm text-slate-600">
+            The backend returns URLs like <span class="mono">/static/outputs/&lt;id&gt;.mp4</span>. This page loads them directly.
+          </div>
+        </div>
+        <div class="glass2 rounded-2xl p-5">
+          <div class="font-medium">Can I host frontend separately from backend?</div>
+          <div class="mt-2 text-sm text-slate-600">
+            Yes. Add <span class="mono">?api=https://your-backend-domain</span> to the URL so it knows where to POST.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-10 pb-10 text-center text-xs text-slate-500">
+      <div class="divider my-6"></div>
+      <div class="flex items-center justify-center gap-2">
+        <img src="/static/logo.png" alt="Logo" class="w-6 h-6 rounded-lg" />
+        <span>© <span id="year"></span> AutoVoiceOver</span>
+      </div>
+      <div class="mt-1">Built to match your FastAPI backend: <span class="mono">POST /upload</span> + <span class="mono">POST /apply-hook</span></div>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      // ---------- Helpers ----------
+      const $ = (sel) => document.querySelector(sel);
+      const toastEl = $("#toast");
+
+      const toast = (msg) => {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.dataset.show = "true";
+        window.clearTimeout(window.__toastTimer);
+        window.__toastTimer = window.setTimeout(() => {
+          toastEl.dataset.show = "false";
+        }, 2200);
+      };
+
+      const fmtMB = (bytes) => (bytes / 1024 / 1024).toFixed(1);
+
+      // API base: same-origin by default; override with ?api=...
+      const params = new URLSearchParams(location.search);
+      const apiBase = (params.get("api") || "").replace(/\/+$/, "");
+      $("#apiBaseLabel").textContent = apiBase ? apiBase : "(same origin)";
+      const apiUrl = (path) => apiBase ? (apiBase + path) : path;
+
+      // Cache buster
+      const withBust = (u) => {
+        if (!u) return u;
+        const sep = u.includes("?") ? "&" : "?";
+        return `${u}${sep}v=${Date.now()}`;
+      };
+
+      const escapeHtml = (s) => String(s || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+      const copyText = async (t) => {
+        try {
+          await navigator.clipboard.writeText(String(t || ""));
+          return true;
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = String(t || "");
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          return true;
+        }
+      };
+
+      // ---------- Elements ----------
+      const mobileBtn = $("#mobileMenuBtn");
+      const mobileMenu = $("#mobileMenu");
+      const dropZone = $("#dropZone");
+      const fileInput = $("#videoFile");
+      const processBtn = $("#processBtn");
+      const resetBtn = $("#resetBtn");
+      const fileMeta = $("#fileMeta");
+      const fileNameEl = $("#fileName");
+      const fileSizeEl = $("#fileSize");
+      const nicheEl = $("#niche");
+      const voiceEl = $("#voice");
+      const offsetEl = $("#offset");
+      const mixEl = $("#mix");
+      const mixLabel = $("#mixLabel");
+      const statusText = $("#statusText");
+      const progressBar = $("#progressBar");
+      const progressPct = $("#progressPct");
+      const progressMB = $("#progressMB");
+
+      const hooksList = $("#hooksList");
+      const copySelectedBtn = $("#copySelectedBtn");
+      const copyAllHooksBtn = $("#copyAllHooksBtn");
+      const exportHooksJsonBtn = $("#exportHooksJsonBtn");
+      const exportHooksCsvBtn = $("#exportHooksCsvBtn");
+
+      const outVideo = $("#outVideo");
+      const outAudio = $("#outAudio");
+      const downloadVideo = $("#downloadVideo");
+      const downloadSrt = $("#downloadSrt");
+      const downloadAudio = $("#downloadAudio");
+
+      // ---------- State ----------
+      let selectedFile = null;
+      let SESSION_ID = null;
+      let lastHooks = [];
+      let selectedHookIndex = 0;
+
+      // ---------- UI init ----------
+      $("#year").textContent = new Date().getFullYear();
+
+      const setStatus = (s) => { if (statusText) statusText.textContent = s; };
+
+      const setProgress = (pct, loaded, total) => {
+        if (progressBar) progressBar.style.width = `${pct}%`;
+        if (progressPct) progressPct.textContent = `${pct}%`;
+        if (progressMB) progressMB.textContent = `${loaded} MB / ${total} MB`;
+      };
+
+      const setDownloadsEnabled = (enabled) => {
+        const on = !!enabled;
+        const toggle = (el, enabled) => {
+          if (!el) return;
+          el.classList.toggle("pointer-events-none", !enabled);
+          el.classList.toggle("opacity-40", !enabled);
+        };
+        toggle(downloadVideo, on);
+        toggle(downloadSrt, on);
+        toggle(downloadAudio, on);
+      };
+
+      const setHookToolsEnabled = (enabled) => {
+        copySelectedBtn.disabled = !enabled;
+        copyAllHooksBtn.disabled = !enabled;
+        exportHooksJsonBtn.disabled = !enabled;
+        exportHooksCsvBtn.disabled = !enabled;
+      };
+
+      const resetAll = () => {
+        selectedFile = null;
+        SESSION_ID = null;
+        lastHooks = [];
+        selectedHookIndex = 0;
+
+        if (fileInput) fileInput.value = "";
+        if (fileMeta) fileMeta.classList.add("hide");
+        if (fileNameEl) fileNameEl.textContent = "";
+        if (fileSizeEl) fileSizeEl.textContent = "";
+
+        processBtn.disabled = true;
+        setStatus("Idle");
+        setProgress(0, "0.0", "0.0");
+
+        hooksList.innerHTML = `<div class="text-sm text-slate-400">No hooks yet.</div>`;
+        setHookToolsEnabled(false);
+
+        if (outVideo) outVideo.removeAttribute("src");
+        if (outAudio) outAudio.removeAttribute("src");
+        if (downloadVideo) downloadVideo.href = "#";
+        if (downloadSrt) downloadSrt.href = "#";
+        if (downloadAudio) downloadAudio.href = "#";
+        setDownloadsEnabled(false);
+
+        toast("Reset complete.");
+      };
+
+      // ---------- Mobile menu ----------
+      if (mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hide");
+        });
+      }
+
+      // ---------- Mix label ----------
+      if (mixEl && mixLabel) {
+        mixLabel.textContent = mixEl.value;
+        mixEl.addEventListener("input", () => mixLabel.textContent = mixEl.value);
+      }
+
+      // ---------- Dropzone / file select ----------
+      const openPicker = () => fileInput && fileInput.click();
+
+      const setFile = (file) => {
+        if (!file) return;
+        selectedFile = file;
+        processBtn.disabled = false;
+
+        if (fileMeta) fileMeta.classList.remove("hide");
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (fileSizeEl) fileSizeEl.textContent = `${fmtMB(file.size)} MB`;
+
+        toast(`Selected: ${file.name}`);
+      };
+
+      if (dropZone) {
+        dropZone.addEventListener("click", openPicker);
+        dropZone.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") openPicker();
+        });
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropZone.classList.add("drop-highlight");
+        });
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drop-highlight"));
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropZone.classList.remove("drop-highlight");
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) setFile(f);
+        });
+      }
+
+      if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f) setFile(f);
+        });
+      }
+
+      // ---------- Apply hook ----------
+      async function applyHook(index) {
+        if (!SESSION_ID) {
+          toast("No active session. Upload a video first.");
+          return;
+        }
+
+        setStatus("Applying hook...");
+        setDownloadsEnabled(false);
+
+        const fd = new FormData();
+        fd.append("session_id", SESSION_ID);
+        fd.append("hook_index", String(index));
+        fd.append("offset", (offsetEl.value || "0").toString());
+        fd.append("mix", (mixEl.value || "80").toString());
+
+        try {
+          const res = await fetch(apiUrl("/apply-hook"), { method: "POST", body: fd });
+          const data = await res.json();
+
+          if (!res.ok) {
+            toast(data.detail || "Apply hook failed.");
+            setStatus("Error");
+            return;
+          }
+
+          const mp4 = data.download_url;
+          const srt = data.srt_url;
+          const mp3 = data.audio_preview_url;
+
+          if (outVideo && mp4) outVideo.src = apiUrl(withBust(mp4));
+          if (outAudio && mp3) outAudio.src = apiUrl(withBust(mp3));
+
+          if (downloadVideo && mp4) downloadVideo.href = apiUrl(withBust(mp4));
+          if (downloadSrt && srt) downloadSrt.href = apiUrl(withBust(srt));
+          if (downloadAudio && mp3) downloadAudio.href = apiUrl(withBust(mp3));
+
+          setDownloadsEnabled(!!(mp4 || srt || mp3));
+          setStatus(`Done (Hook #${index + 1})`);
+          toast(`Applied hook #${index + 1}.`);
+
+          if (outAudio) outAudio.play().catch(() => {});
+        } catch (e) {
+          setStatus("Network error");
+          toast("Network error while applying hook.");
+        }
+      }
+
+      // ---------- Hooks UI ----------
+      const renderHooks = (hooks) => {
+        lastHooks = Array.isArray(hooks) ? hooks : [];
+        selectedHookIndex = 0;
+
+        if (!lastHooks.length) {
+          hooksList.innerHTML = `<div class="text-sm text-slate-400">No hooks returned.</div>`;
+          setHookToolsEnabled(false);
+          return;
+        }
+
+        setHookToolsEnabled(true);
+
+        hooksList.innerHTML = lastHooks.map((h, i) => {
+          const safe = escapeHtml(h || "");
+          const checked = i === 0 ? "checked" : "";
+          return `
+            <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 hover:bg-white transition cursor-pointer">
+              <input type="radio" name="hookPick" value="${i}" class="mt-1" ${checked} />
+              <div class="flex-1">
+                <div class="text-xs text-slate-500">Hook #${i + 1}</div>
+                <div class="text-sm text-slate-800 leading-relaxed">${safe}</div>
+
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" data-use="${i}" class="btn rounded-full px-3 py-1 text-xs bg-indigo-600 text-white hover:opacity-95">
+                    Use
+                  </button>
+                  <button type="button" data-copy="${i}" class="btn rounded-full px-3 py-1 text-xs bg-slate-900 text-white hover:opacity-95">
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </label>
+          `;
+        }).join("");
+
+        // radio change
+        hooksList.querySelectorAll('input[name="hookPick"]').forEach((r) => {
+          r.addEventListener("change", (e) => {
+            selectedHookIndex = Number(e.target.value || 0);
+          });
+        });
+
+        // use buttons
+        hooksList.querySelectorAll("button[data-use]").forEach((b) => {
+          b.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const idx = Number(b.getAttribute("data-use") || 0);
+            selectedHookIndex = idx;
+            await applyHook(idx);
+          });
+        });
+
+        // copy buttons
+        hooksList.querySelectorAll("button[data-copy]").forEach((b) => {
+          b.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const idx = Number(b.getAttribute("data-copy") || 0);
+            const text = lastHooks[idx] || "";
+            await copyText(text);
+            toast(`Copied hook #${idx + 1}`);
+          });
+        });
+      };
+
+      // Copy selected hook
+      copySelectedBtn.addEventListener("click", async () => {
+        if (!lastHooks.length) return;
+        const text = lastHooks[selectedHookIndex] || lastHooks[0] || "";
+        await copyText(text);
+        toast("Copied selected hook.");
+      });
+
+      // Copy all hooks
+      copyAllHooksBtn.addEventListener("click", async () => {
+        if (!lastHooks.length) return;
+        const all = lastHooks.map((h, i) => `Hook #${i + 1}: ${h}`).join("\n");
+        await copyText(all);
+        toast("Copied all hooks.");
+      });
+
+      // Export JSON
+      exportHooksJsonBtn.addEventListener("click", () => {
+        if (!lastHooks.length) return;
+        const blob = new Blob([JSON.stringify({ hooks: lastHooks }, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "hooks.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+        toast("Downloaded hooks.json");
+      });
+
+      // Export CSV
+      exportHooksCsvBtn.addEventListener("click", () => {
+        if (!lastHooks.length) return;
+        const rows = ["index,hook"];
+        lastHooks.forEach((h, i) => {
+          const v = String(h || "").replaceAll('"', '""');
+          rows.push(`${i + 1},"${v}"`);
+        });
+        const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "hooks.csv";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+        toast("Downloaded hooks.csv");
+      });
+
+      // ---------- Upload / process ----------
+      const setBusy = (busy) => {
+        processBtn.disabled = busy || !selectedFile;
+        processBtn.textContent = busy ? "Processing..." : "Generate Output";
+      };
+
+      async function processNow() {
+        if (!selectedFile) {
+          toast("Please select a video first.");
+          return;
+        }
+
+        setBusy(true);
+        setDownloadsEnabled(false);
+        setHookToolsEnabled(false);
+        renderHooks([]);
+        setStatus("Uploading...");
+        setProgress(0, "0.0", "0.0");
+
+        const niche = nicheEl.value || "content";
+        const voice = voiceEl.value || "male";
+        const offset = (offsetEl.value || "0").toString();
+        const mix = (mixEl.value || "80").toString();
+
+        const form = new FormData();
+        form.append("file", selectedFile);
+        form.append("niche", niche);
+        form.append("voice", voice);
+        form.append("offset", offset);
+        form.append("mix", mix);
+
+        // Use XHR for upload progress
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", apiUrl("/upload"), true);
+
+        xhr.upload.onprogress = (e) => {
+          if (!e.lengthComputable) return;
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setProgress(pct, fmtMB(e.loaded), fmtMB(e.total));
+        };
+
+        xhr.onload = () => {
+          if (xhr.status !== 200) {
+            setBusy(false);
+            setStatus(`Error (${xhr.status})`);
+            toast(`Upload failed: ${xhr.status}`);
+            return;
+          }
+
+          let data;
+          try {
+            data = JSON.parse(xhr.responseText);
+          } catch {
+            setBusy(false);
+            setStatus("Error (invalid JSON)");
+            toast("Server returned invalid JSON.");
+            return;
+          }
+
+          SESSION_ID = data.session_id || null;
+
+          setStatus("Done");
+          setProgress(100, fmtMB(selectedFile.size), fmtMB(selectedFile.size));
+          toast("Your output is ready.");
+
+          renderHooks(data.all_hooks || (data.hook_text ? [data.hook_text] : []));
+
+          // Media URLs
+          const mp4 = data.download_url;
+          const srt = data.srt_url;
+          const mp3 = data.audio_preview_url;
+
+          if (outVideo && mp4) outVideo.src = apiUrl(withBust(mp4));
+          if (outAudio && mp3) outAudio.src = apiUrl(withBust(mp3));
+
+          if (downloadVideo && mp4) {
+            downloadVideo.href = apiUrl(withBust(mp4));
+            downloadVideo.setAttribute("download", "autovoiceover.mp4");
+          }
+          if (downloadSrt && srt) {
+            downloadSrt.href = apiUrl(withBust(srt));
+            downloadSrt.setAttribute("download", "subtitles.srt");
+          }
+          if (downloadAudio && mp3) {
+            downloadAudio.href = apiUrl(withBust(mp3));
+            downloadAudio.setAttribute("download", "voiceover.mp3");
+          }
+
+          setDownloadsEnabled(!!(mp4 || srt || mp3));
+          setBusy(false);
+
+          if (outAudio) outAudio.play().catch(() => {});
+        };
+
+        xhr.onerror = () => {
+          setBusy(false);
+          setStatus("Network error");
+          toast("Network error. Check server connection.");
+        };
+
+        xhr.send(form);
+      }
+
+      // ---------- Buttons ----------
+      processBtn.addEventListener("click", processNow);
+      resetBtn.addEventListener("click", resetAll);
+
+      // ---------- Start ----------
+      resetAll();
+    })();
+  </script>
+</body>
+</html>
