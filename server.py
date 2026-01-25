@@ -263,11 +263,12 @@ async def upload_video(
         # laatste fallback
         shutil.copyfile(in_video_path, out_video_path)
 
-    # 6) URLs teruggeven (frontend plakt zelf origin ervoor)
-    return {
-        "download_url": f"/static/outputs/{out_video_path.name}",
-        "srt_url": f"/static/outputs/{srt_path.name}",
-        "audio_preview_url": f"/static/outputs/{audio_path.name}",
-        "hook_text": hook_text,
-        "all_hooks": all_hooks,  # <--- extra veld voor A/B test
-    }
+return {
+    "session_id": uid,
+    "download_url": f"/static/outputs/{out_video_path.name}",
+    "srt_url": f"/static/outputs/{srt_path.name}",
+    "audio_preview_url": f"/static/outputs/{audio_path.name}",
+    "hook_text": hook_text,
+    "all_hooks": all_hooks,
+}
+
