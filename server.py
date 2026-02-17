@@ -5,7 +5,7 @@ import random
 import subprocess
 import datetime as dt
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse, FileResponse
@@ -29,11 +29,11 @@ for d in [STATIC_DIR, UPLOAD_DIR, OUTPUT_DIR]:
 # -------------------------------------------------------------------
 # FastAPI app
 # -------------------------------------------------------------------
-app = FastAPI(title="AutoSubtitle Backend", version="1.1")
+app = FastAPI(title="AutoSubtitle Backend", version="1.2")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # eventueel later beperken
+    allow_origins=["*"],  # later eventueel beperken
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,20 +42,39 @@ app.add_middleware(
 # Serve /static
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+# -------------------------------------------------------------------
+# Voice presets (gTTS-based) — accent + pacing
+# -------------------------------------------------------------------
+VOICE_PRESETS = {
+    # Accents (clear)
+    "us_clear": {"tld": "com",    "pace": 1.00, "slow": False},  # US
+    "uk_clear": {"tld": "co.uk",  "pace": 1.00, "slow": False},  # UK
+    "au_clear": {"tld": "com.au", "pace": 1.00, "slow": False},  # AU
+    "in_clear": {"tld": "co.in",  "pace": 1.00, "slow": False},  # IN English
+
+    # Vibes
+    "energetic": {"tld": "com",    "pace": 1.12, "slow": False},  # faster
+    "calm":      {"tld": "com.au", "pace": 0.92, "slow": True},   # slower
+
+    # Extra variants
+    "us_fast": {"tld": "com",   "pace": 1.18, "slow": False},
+    "uk_calm": {"tld": "co.uk", "pace": 0.93, "slow": True},
+}
+
+DEFAULT_VOICE = "us_clear"
 
 # -------------------------------------------------------------------
 # Helpers
 # -------------------------------------------------------------------
-
 def sanitize_offset(raw: str) -> float:
     """Zorgt dat '0,3' of '0.3' allebei werken."""
     if raw is None:
         return 0.0
-    raw = raw.replace(",", ".")
+    raw = str(raw).replace(",", ".")
     try:
         v = float(raw)
         return max(0.0, v)
-    except ValueError:
+    except Exception:
         return 0.0
 
 
@@ -63,7 +82,7 @@ def sanitize_mix(raw: str) -> int:
     """Clamp mix tussen 0–100."""
     try:
         v = int(float(raw))
-    except ValueError:
+    except Exception:
         v = 80
     return max(0, min(100, v))
 
@@ -74,10 +93,18 @@ def generate_hooks(niche: str, voice: str, num: int = 5) -> List[str]:
     voice = (voice or "neutral").strip().lower()
 
     style_words = {
+        # legacy names (als je oude frontend nog male/female stuurt)
         "male": ["bold", "no-fluff", "direct"],
         "female": ["warm", "confident", "sharp"],
         "energetic": ["high-energy", "punchy", "fast-paced"],
         "calm": ["low-key", "soothing", "steady"],
+        # new preset names (accents): treat as "clean"
+        "us_clear": ["clean", "direct", "high-converting"],
+        "uk_clear": ["clean", "confident", "sharp"],
+        "au_clear": ["clean", "simple", "high-converting"],
+        "in_clear": ["clean", "punchy", "direct"],
+        "us_fast": ["fast-paced", "punchy", "direct"],
+        "uk_calm": ["low-key", "soothing", "steady"],
     }.get(voice, ["clean", "simple", "high-converting"])
 
     templates = [
@@ -139,6 +166,53 @@ def build_srt(text: str) -> str:
     return srt.compose(subtitles)
 
 
+def apply_audio_pace(in_mp3: Path, out_mp3: Path, pace: float) -> None:
+    """
+    Speed up / slow down mp3 with ffmpeg atempo.
+    pace: 0.5 - 2.0
+    """
+    pace = max(0.5, min(2.0, float(pace)))
+    if abs(pace - 1.0) < 0.01:
+        shutil.copyfile(in_mp3, out_mp3)
+        return
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", str(in_mp3),
+        "-filter:a", f"atempo={pace}",
+        str(out_mp3),
+    ]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except Exception:
+        shutil.copyfile(in_mp3, out_mp3)
+
+
+def tts_to_mp3(text: str, out_mp3: Path, voice_key: str) -> None:
+    """
+    Generate mp3 with gTTS accent (tld) + optional slow + optional pace adjustment.
+    """
+    preset = VOICE_PRESETS.get((voice_key or "").lower(), VOICE_PRESETS[DEFAULT_VOICE])
+
+    tmp = out_mp3.with_name(out_mp3.stem + "_raw.mp3")
+    try:
+        gTTS(
+            text=text,
+            lang="en",
+            tld=preset["tld"],
+            slow=bool(preset["slow"]),
+        ).save(tmp.as_posix())
+
+        apply_audio_pace(tmp, out_mp3, float(preset["pace"]))
+    finally:
+        # cleanup temp if exists
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+
+
 def merge_video_and_audio(
     video_path: Path,
     audio_path: Path,
@@ -151,7 +225,6 @@ def merge_video_and_audio(
     - offset_sec: start vertraging AI voice
     - mix_pct: hoeveel % AI voice vs origineel
     """
-
     offset_ms = max(0, int(offset_sec * 1000))
     mix_pct = max(0, min(100, mix_pct))
 
@@ -161,10 +234,8 @@ def merge_video_and_audio(
     cmd = [
         "ffmpeg",
         "-y",
-        "-i",
-        str(video_path),
-        "-i",
-        str(audio_path),
+        "-i", str(video_path),
+        "-i", str(audio_path),
         "-filter_complex",
         (
             f"[0:a]volume={orig_vol}[a0];"
@@ -185,10 +256,36 @@ def merge_video_and_audio(
         shutil.copyfile(video_path, out_path)
 
 
+def cleanup_old_files(max_age_hours: int = 24) -> None:
+    """
+    Prevent Render disk fill: delete uploads/outputs older than max_age_hours.
+    Runs fast (best-effort).
+    """
+    cutoff = dt.datetime.utcnow() - dt.timedelta(hours=max_age_hours)
+
+    def _purge(folder: Path, suffixes: Optional[set] = None):
+        try:
+            for p in folder.iterdir():
+                if p.is_dir():
+                    continue
+                if suffixes and p.suffix.lower() not in suffixes:
+                    continue
+                mtime = dt.datetime.utcfromtimestamp(p.stat().st_mtime)
+                if mtime < cutoff:
+                    try:
+                        p.unlink()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+    _purge(UPLOAD_DIR)  # any upload
+    _purge(OUTPUT_DIR, suffixes={".mp3", ".mp4", ".srt", ".txt"})
+
+
 # -------------------------------------------------------------------
 # Routes
 # -------------------------------------------------------------------
-
 @app.get("/")
 async def index():
     index_path = STATIC_DIR / "index.html"
@@ -201,12 +298,15 @@ async def index():
 async def upload_video(
     file: UploadFile = File(...),
     niche: str = Form("content"),
-    voice: str = Form("male"),
+    voice: str = Form(DEFAULT_VOICE),
     offset: str = Form("0"),
     mix: str = Form("80"),
 ):
     if not file.filename:
         return JSONResponse({"detail": "No file uploaded"}, status_code=400)
+
+    # one-shot cleanup (best-effort)
+    cleanup_old_files(max_age_hours=24)
 
     # 1) Save upload
     uid = uuid.uuid4().hex
@@ -226,11 +326,12 @@ async def upload_video(
         for h in all_hooks:
             f.write(h + "\n")
 
-    # 3) AI voice-over als MP3 maken (gTTS)
+    # 3) AI voice-over als MP3 maken (gTTS presets)
     audio_path = OUTPUT_DIR / f"{uid}.mp3"
     try:
-        gTTS(text=hook_text, lang="en").save(audio_path.as_posix())
+        tts_to_mp3(hook_text, audio_path, voice_key=voice)
     except Exception:
+        # last resort: dummy file
         with open(audio_path, "wb") as f_dummy:
             f_dummy.write(b"")
 
@@ -264,6 +365,7 @@ async def upload_video(
 async def apply_hook(
     session_id: str = Form(...),
     hook_index: int = Form(...),
+    voice: str = Form(DEFAULT_VOICE),
     offset: str = Form("0"),
     mix: str = Form("80"),
 ):
@@ -292,7 +394,7 @@ async def apply_hook(
     # Genereer nieuwe audio/srt/video (chosen)
     audio_path = OUTPUT_DIR / f"{session_id}_chosen.mp3"
     try:
-        gTTS(text=hook_text, lang="en").save(audio_path.as_posix())
+        tts_to_mp3(hook_text, audio_path, voice_key=voice)
     except Exception:
         with open(audio_path, "wb") as f_dummy:
             f_dummy.write(b"")
@@ -305,7 +407,10 @@ async def apply_hook(
     out_video_path = OUTPUT_DIR / f"{session_id}_chosen.mp4"
     off = sanitize_offset(offset)
     mix_val = sanitize_mix(mix)
-    merge_video_and_audio(orig_video, audio_path, out_video_path, off, mix_val)
+    try:
+        merge_video_and_audio(orig_video, audio_path, out_video_path, off, mix_val)
+    except Exception:
+        shutil.copyfile(orig_video, out_video_path)
 
     return {
         "download_url": f"/static/outputs/{out_video_path.name}",
