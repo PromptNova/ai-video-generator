@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -238,6 +237,7 @@
 
         <!-- Settings -->
         <div class="mt-6 grid md:grid-cols-2 gap-4">
+          <!-- Niche preset -->
           <div>
             <label class="text-sm font-medium text-slate-700" for="niche">Niche</label>
             <select id="niche" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring">
@@ -250,18 +250,43 @@
               <option value="travel">Travel</option>
               <option value="content" selected>General</option>
             </select>
-            <p class="mt-1 text-xs text-slate-500">Used to shape the hook style returned by the backend.</p>
+            <p class="mt-1 text-xs text-slate-500">Or type your own niche below.</p>
           </div>
 
+          <!-- Voice presets -->
           <div>
             <label class="text-sm font-medium text-slate-700" for="voice">Voice</label>
             <select id="voice" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring">
-              <option value="male" selected>Male</option>
-              <option value="female">Female</option>
+              <option value="us_clear" selected>US — Clear</option>
+              <option value="uk_clear">UK — Clear</option>
+              <option value="au_clear">AU — Clear</option>
+              <option value="in_clear">IN — Clear</option>
               <option value="energetic">Energetic</option>
               <option value="calm">Calm</option>
+              <option value="us_fast">US — Fast</option>
+              <option value="uk_calm">UK — Calm</option>
             </select>
-            <p class="mt-1 text-xs text-slate-500">Matches backend values exactly.</p>
+            <p class="mt-1 text-xs text-slate-500">These map to server voice presets.</p>
+          </div>
+
+          <!-- Custom niche -->
+          <div class="md:col-span-2">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1">
+                <label class="text-sm font-medium text-slate-700" for="customNiche">Custom niche (optional)</label>
+                <input id="customNiche" type="text" placeholder="e.g. real estate, barber, dentists, crypto, car detailing..."
+                  class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring" />
+                <p class="mt-1 text-xs text-slate-500">
+                  If filled, this will override the dropdown niche automatically.
+                </p>
+              </div>
+              <div class="pt-7">
+                <label class="inline-flex items-center gap-2 text-xs text-slate-600 select-none">
+                  <input id="useCustomNiche" type="checkbox" class="rounded" checked />
+                  Use custom niche
+                </label>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -393,7 +418,7 @@
         </div>
       </div>
       <div class="mt-8 text-sm text-slate-500">
-        Your backend must be running and reachable. For local testing, start your FastAPI server and open this page from the same host.
+        Your backend must be running and reachable.
       </div>
     </section>
 
@@ -411,19 +436,19 @@
         <div class="glass2 rounded-2xl p-5">
           <div class="font-medium">Can I generate voice-over for hook #2–#5?</div>
           <div class="mt-2 text-sm text-slate-600">
-            Yes. Generate once, then click <span class="mono">Use</span> on any hook. The app will call <span class="mono">POST /apply-hook</span> without re-uploading.
+            Yes. Generate once, then click <span class="mono">Use</span> on any hook. The app calls <span class="mono">POST /apply-hook</span>.
           </div>
         </div>
         <div class="glass2 rounded-2xl p-5">
           <div class="font-medium">Where do the output files live?</div>
           <div class="mt-2 text-sm text-slate-600">
-            The backend returns URLs like <span class="mono">/static/outputs/&lt;id&gt;.mp4</span>. This page loads them directly.
+            The backend returns URLs like <span class="mono">/static/outputs/&lt;id&gt;.mp4</span>.
           </div>
         </div>
         <div class="glass2 rounded-2xl p-5">
           <div class="font-medium">Can I host frontend separately from backend?</div>
           <div class="mt-2 text-sm text-slate-600">
-            Yes. Add <span class="mono">?api=https://your-backend-domain</span> to the URL so it knows where to POST.
+            Yes. Add <span class="mono">?api=https://your-backend-domain</span> to the URL.
           </div>
         </div>
       </div>
@@ -442,7 +467,6 @@
 
   <script>
     (function () {
-      // ---------- Helpers ----------
       const $ = (sel) => document.querySelector(sel);
       const toastEl = $("#toast");
 
@@ -458,13 +482,12 @@
 
       const fmtMB = (bytes) => (bytes / 1024 / 1024).toFixed(1);
 
-      // API base: same-origin by default; override with ?api=...
+      // API base
       const params = new URLSearchParams(location.search);
       const apiBase = (params.get("api") || "").replace(/\/+$/, "");
       $("#apiBaseLabel").textContent = apiBase ? apiBase : "(same origin)";
       const apiUrl = (path) => apiBase ? (apiBase + path) : path;
 
-      // Cache buster
       const withBust = (u) => {
         if (!u) return u;
         const sep = u.includes("?") ? "&" : "?";
@@ -493,7 +516,7 @@
         }
       };
 
-      // ---------- Elements ----------
+      // Elements
       const mobileBtn = $("#mobileMenuBtn");
       const mobileMenu = $("#mobileMenu");
       const dropZone = $("#dropZone");
@@ -503,11 +526,16 @@
       const fileMeta = $("#fileMeta");
       const fileNameEl = $("#fileName");
       const fileSizeEl = $("#fileSize");
+
       const nicheEl = $("#niche");
+      const customNicheEl = $("#customNiche");
+      const useCustomNicheEl = $("#useCustomNiche");
+
       const voiceEl = $("#voice");
       const offsetEl = $("#offset");
       const mixEl = $("#mix");
       const mixLabel = $("#mixLabel");
+
       const statusText = $("#statusText");
       const progressBar = $("#progressBar");
       const progressPct = $("#progressPct");
@@ -525,13 +553,12 @@
       const downloadSrt = $("#downloadSrt");
       const downloadAudio = $("#downloadAudio");
 
-      // ---------- State ----------
+      // State
       let selectedFile = null;
       let SESSION_ID = null;
       let lastHooks = [];
       let selectedHookIndex = 0;
 
-      // ---------- UI init ----------
       $("#year").textContent = new Date().getFullYear();
 
       const setStatus = (s) => { if (statusText) statusText.textContent = s; };
@@ -561,6 +588,19 @@
         exportHooksCsvBtn.disabled = !enabled;
       };
 
+      const setBusy = (busy) => {
+        processBtn.disabled = busy || !selectedFile;
+        processBtn.textContent = busy ? "Processing..." : "Generate Output";
+      };
+
+      const getEffectiveNiche = () => {
+        const custom = (customNicheEl.value || "").trim();
+        const useCustom = !!useCustomNicheEl.checked;
+        if (useCustom && custom.length >= 2) return custom;
+        return (nicheEl.value || "content");
+      };
+
+      // Reset
       const resetAll = () => {
         selectedFile = null;
         SESSION_ID = null;
@@ -589,20 +629,18 @@
         toast("Reset complete.");
       };
 
-      // ---------- Mobile menu ----------
+      // Mobile menu
       if (mobileBtn && mobileMenu) {
-        mobileBtn.addEventListener("click", () => {
-          mobileMenu.classList.toggle("hide");
-        });
+        mobileBtn.addEventListener("click", () => mobileMenu.classList.toggle("hide"));
       }
 
-      // ---------- Mix label ----------
+      // Mix label
       if (mixEl && mixLabel) {
         mixLabel.textContent = mixEl.value;
         mixEl.addEventListener("input", () => mixLabel.textContent = mixEl.value);
       }
 
-      // ---------- Dropzone / file select ----------
+      // Dropzone
       const openPicker = () => fileInput && fileInput.click();
 
       const setFile = (file) => {
@@ -642,7 +680,7 @@
         });
       }
 
-      // ---------- Apply hook ----------
+      // Apply hook (now sends voice)
       async function applyHook(index) {
         if (!SESSION_ID) {
           toast("No active session. Upload a video first.");
@@ -655,6 +693,7 @@
         const fd = new FormData();
         fd.append("session_id", SESSION_ID);
         fd.append("hook_index", String(index));
+        fd.append("voice", (voiceEl.value || "us_clear"));
         fd.append("offset", (offsetEl.value || "0").toString());
         fd.append("mix", (mixEl.value || "80").toString());
 
@@ -690,7 +729,7 @@
         }
       }
 
-      // ---------- Hooks UI ----------
+      // Hooks UI
       const renderHooks = (hooks) => {
         lastHooks = Array.isArray(hooks) ? hooks : [];
         selectedHookIndex = 0;
@@ -706,6 +745,8 @@
         hooksList.innerHTML = lastHooks.map((h, i) => {
           const safe = escapeHtml(h || "");
           const checked = i === 0 ? "checked" : "";
+          const useDisabled = SESSION_ID ? "" : "disabled";
+          const useOpacity = SESSION_ID ? "" : "opacity-50 cursor-not-allowed";
           return `
             <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 hover:bg-white transition cursor-pointer">
               <input type="radio" name="hookPick" value="${i}" class="mt-1" ${checked} />
@@ -714,7 +755,7 @@
                 <div class="text-sm text-slate-800 leading-relaxed">${safe}</div>
 
                 <div class="mt-3 flex flex-wrap gap-2">
-                  <button type="button" data-use="${i}" class="btn rounded-full px-3 py-1 text-xs bg-indigo-600 text-white hover:opacity-95">
+                  <button type="button" data-use="${i}" class="btn rounded-full px-3 py-1 text-xs bg-indigo-600 text-white hover:opacity-95 ${useOpacity}" ${useDisabled}>
                     Use
                   </button>
                   <button type="button" data-copy="${i}" class="btn rounded-full px-3 py-1 text-xs bg-slate-900 text-white hover:opacity-95">
@@ -726,14 +767,12 @@
           `;
         }).join("");
 
-        // radio change
         hooksList.querySelectorAll('input[name="hookPick"]').forEach((r) => {
           r.addEventListener("change", (e) => {
             selectedHookIndex = Number(e.target.value || 0);
           });
         });
 
-        // use buttons
         hooksList.querySelectorAll("button[data-use]").forEach((b) => {
           b.addEventListener("click", async (e) => {
             e.preventDefault();
@@ -744,7 +783,6 @@
           });
         });
 
-        // copy buttons
         hooksList.querySelectorAll("button[data-copy]").forEach((b) => {
           b.addEventListener("click", async (e) => {
             e.preventDefault();
@@ -757,7 +795,6 @@
         });
       };
 
-      // Copy selected hook
       copySelectedBtn.addEventListener("click", async () => {
         if (!lastHooks.length) return;
         const text = lastHooks[selectedHookIndex] || lastHooks[0] || "";
@@ -765,7 +802,6 @@
         toast("Copied selected hook.");
       });
 
-      // Copy all hooks
       copyAllHooksBtn.addEventListener("click", async () => {
         if (!lastHooks.length) return;
         const all = lastHooks.map((h, i) => `Hook #${i + 1}: ${h}`).join("\n");
@@ -773,7 +809,6 @@
         toast("Copied all hooks.");
       });
 
-      // Export JSON
       exportHooksJsonBtn.addEventListener("click", () => {
         if (!lastHooks.length) return;
         const blob = new Blob([JSON.stringify({ hooks: lastHooks }, null, 2)], { type: "application/json" });
@@ -787,7 +822,6 @@
         toast("Downloaded hooks.json");
       });
 
-      // Export CSV
       exportHooksCsvBtn.addEventListener("click", () => {
         if (!lastHooks.length) return;
         const rows = ["index,hook"];
@@ -806,12 +840,7 @@
         toast("Downloaded hooks.csv");
       });
 
-      // ---------- Upload / process ----------
-      const setBusy = (busy) => {
-        processBtn.disabled = busy || !selectedFile;
-        processBtn.textContent = busy ? "Processing..." : "Generate Output";
-      };
-
+      // Upload / process
       async function processNow() {
         if (!selectedFile) {
           toast("Please select a video first.");
@@ -825,8 +854,8 @@
         setStatus("Uploading...");
         setProgress(0, "0.0", "0.0");
 
-        const niche = nicheEl.value || "content";
-        const voice = voiceEl.value || "male";
+        const niche = getEffectiveNiche();
+        const voice = (voiceEl.value || "us_clear");
         const offset = (offsetEl.value || "0").toString();
         const mix = (mixEl.value || "80").toString();
 
@@ -837,7 +866,6 @@
         form.append("offset", offset);
         form.append("mix", mix);
 
-        // Use XHR for upload progress
         const xhr = new XMLHttpRequest();
         xhr.open("POST", apiUrl("/upload"), true);
 
@@ -873,9 +901,8 @@
 
           renderHooks(data.all_hooks || (data.hook_text ? [data.hook_text] : []));
 
-          // Media URLs
           const mp4 = data.download_url;
-          const srt = data.srt_url;
+          const srtf = data.srt_url;
           const mp3 = data.audio_preview_url;
 
           if (outVideo && mp4) outVideo.src = apiUrl(withBust(mp4));
@@ -885,8 +912,8 @@
             downloadVideo.href = apiUrl(withBust(mp4));
             downloadVideo.setAttribute("download", "autovoiceover.mp4");
           }
-          if (downloadSrt && srt) {
-            downloadSrt.href = apiUrl(withBust(srt));
+          if (downloadSrt && srtf) {
+            downloadSrt.href = apiUrl(withBust(srtf));
             downloadSrt.setAttribute("download", "subtitles.srt");
           }
           if (downloadAudio && mp3) {
@@ -894,7 +921,7 @@
             downloadAudio.setAttribute("download", "voiceover.mp3");
           }
 
-          setDownloadsEnabled(!!(mp4 || srt || mp3));
+          setDownloadsEnabled(!!(mp4 || srtf || mp3));
           setBusy(false);
 
           if (outAudio) outAudio.play().catch(() => {});
@@ -909,11 +936,9 @@
         xhr.send(form);
       }
 
-      // ---------- Buttons ----------
       processBtn.addEventListener("click", processNow);
       resetBtn.addEventListener("click", resetAll);
 
-      // ---------- Start ----------
       resetAll();
     })();
   </script>
