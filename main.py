@@ -3,11 +3,12 @@ AutoVoiceOver Studio — Backend Server
 Perfectly tuned for AutoVoiceOver Studio frontend.
 
 Endpoints:
-  GET  /health          → status check
-  POST /upload          → process video + generate hooks + voiceover
-  POST /apply-hook      → apply selected hook to existing session
-  POST /translate       → translate script to target language
-  GET  /sessions/{id}   → get session data
+  GET  /              → serve index.html
+  GET  /health        → status check
+  POST /upload        → process video + generate hooks + voiceover
+  POST /apply-hook    → apply selected hook to existing session
+  POST /translate     → translate script to target language
+  GET  /sessions/{id} → get session data
   DELETE /sessions/{id} → cleanup session
 
 Requirements:
@@ -23,7 +24,6 @@ import json
 import time
 import shutil
 import asyncio
-import tempfile
 import logging
 from pathlib import Path
 from typing import Optional
@@ -61,8 +61,8 @@ ELEVENLABS_VOICES = {
 
 OPENAI_VOICES = {
     "us_clear": "alloy", "uk_clear": "echo", "au_clear": "fable",
-    "in_clear": "onyx", "energetic": "nova", "calm": "shimmer",
-    "deep": "onyx", "warm": "nova",
+    "in_clear": "onyx",  "energetic": "nova", "calm": "shimmer",
+    "deep": "onyx",      "warm": "nova",
 }
 
 NICHE_PROMPTS = {
@@ -91,6 +91,8 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
+# ─── Session Store ───────────────────────────────────────────────────────────
+
 class SessionStore:
     def __init__(self):
         self._sessions: dict[str, dict] = {}
@@ -99,7 +101,9 @@ class SessionStore:
         data["created_at"] = time.time()
         self._sessions[session_id] = data
         path = SESSIONS_DIR / f"{session_id}.json"
-        path.write_text(json.dumps({k: v for k, v in data.items() if k != "file_path"}, default=str))
+        path.write_text(json.dumps(
+            {k: v for k, v in data.items() if k != "file_path"}, default=str
+        ))
 
     def get(self, session_id: str) -> Optional[dict]:
         if session_id in self._sessions:
@@ -129,11 +133,30 @@ class SessionStore:
 sessions = SessionStore()
 
 
-async def generate_tts(text: str, voice: str, output_path: Path, speed: float = 1.0, pitch: float = 0) -> Path:
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+def normalize_mix(mix_raw) -> float:
+    """
+    Accept mix as 0-100 (from frontend slider) or 0.0-1.0 (direct float).
+    Always returns a 0.0-1.0 float for moviepy.
+    """
+    try:
+        v = float(mix_raw)
+    except Exception:
+        return 0.5
+    if v > 1.0:
+        v = v / 100.0
+    return max(0.0, min(1.0, v))
+
+
+async def generate_tts(
+    text: str, voice: str, output_path: Path,
+    speed: float = 1.0, pitch: float = 0
+) -> Path:
     if ELEVENLABS_KEY:
         try:
-            voice_id = ELEVENLABS_VOICES.get(voice, ELEVENLABS_VOICES["us_clear"])
-            stability = 0.5
+            voice_id   = ELEVENLABS_VOICES.get(voice, ELEVENLABS_VOICES["us_clear"])
+            stability  = 0.5
             similarity = 0.75
             if voice == "energetic": stability = 0.35; similarity = 0.8
             elif voice == "calm":    stability = 0.75; similarity = 0.7
@@ -142,7 +165,14 @@ async def generate_tts(text: str, voice: str, output_path: Path, speed: float = 
                 r = await client.post(
                     f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
                     headers={"xi-api-key": ELEVENLABS_KEY, "Accept": "audio/mpeg"},
-                    json={"text": text, "model_id": "eleven_turbo_v2_5", "voice_settings": {"stability": stability, "similarity_boost": similarity, "style": 0.0, "use_speaker_boost": True}},
+                    json={
+                        "text": text,
+                        "model_id": "eleven_turbo_v2_5",
+                        "voice_settings": {
+                            "stability": stability, "similarity_boost": similarity,
+                            "style": 0.0, "use_speaker_boost": True
+                        }
+                    },
                 )
                 r.raise_for_status()
                 output_path.write_bytes(r.content)
@@ -153,10 +183,12 @@ async def generate_tts(text: str, voice: str, output_path: Path, speed: float = 
     if OPENAI_API_KEY:
         try:
             import openai
-            client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
+            client   = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
             response = await client.audio.speech.create(
-                model="tts-1-hd", voice=OPENAI_VOICES.get(voice, "alloy"),
-                input=text, speed=max(0.25, min(4.0, speed)),
+                model="tts-1-hd",
+                voice=OPENAI_VOICES.get(voice, "alloy"),
+                input=text,
+                speed=max(0.25, min(4.0, speed)),
             )
             output_path.write_bytes(response.content)
             return output_path
@@ -175,9 +207,11 @@ async def generate_tts(text: str, voice: str, output_path: Path, speed: float = 
         raise HTTPException(500, f"TTS generation failed: {e}")
 
 
-async def generate_hooks(video_description: str, niche: str, script: Optional[str] = None) -> list[str]:
+async def generate_hooks(
+    video_description: str, niche: str, script: Optional[str] = None
+) -> list[str]:
     niche_style = NICHE_PROMPTS.get(niche.lower(), NICHE_PROMPTS["general"])
-    context = f"Video context: {video_description}"
+    context     = f"Video context: {video_description}"
     if script:
         context += f"\nExisting script: {script}"
 
@@ -205,11 +239,19 @@ Return ONLY a JSON array of 7 strings. No explanation."""
             async with httpx.AsyncClient(timeout=30) as client:
                 r = await client.post(
                     "https://api.anthropic.com/v1/messages",
-                    headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-                    json={"model": "claude-haiku-4-5-20251001", "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]},
+                    headers={
+                        "x-api-key": ANTHROPIC_API_KEY,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json={
+                        "model": "claude-haiku-4-5-20251001",
+                        "max_tokens": 1024,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
                 )
                 r.raise_for_status()
-                content = r.json()["content"][0]["text"]
+                content    = r.json()["content"][0]["text"]
                 start, end = content.find("["), content.rfind("]") + 1
                 if start >= 0 and end > start:
                     hooks = json.loads(content[start:end])
@@ -221,12 +263,14 @@ Return ONLY a JSON array of 7 strings. No explanation."""
     if OPENAI_API_KEY:
         try:
             import openai
-            client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
-            r = await client.chat.completions.create(
-                model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}],
-                max_tokens=1024, temperature=0.85,
+            client  = openai.AsyncOpenAI(api_key=OPENAI_API_KEY)
+            r       = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=1024,
+                temperature=0.85,
             )
-            content = r.choices[0].message.content
+            content    = r.choices[0].message.content
             start, end = content.find("["), content.rfind("]") + 1
             if start >= 0 and end > start:
                 hooks = json.loads(content[start:end])
@@ -246,19 +290,31 @@ Return ONLY a JSON array of 7 strings. No explanation."""
     ]
 
 
-async def process_video(video_path: Path, audio_path: Path, output_path: Path, offset: float = 0.0, mix: float = 0.5, fade_in: int = 0, fade_out: int = 0) -> Path:
+async def process_video(
+    video_path: Path, audio_path: Path, output_path: Path,
+    offset: float = 0.0, mix: float = 0.5,
+    fade_in: int = 0, fade_out: int = 0,
+) -> Path:
     try:
         from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
-        video = VideoFileClip(str(video_path))
+        video    = VideoFileClip(str(video_path))
         vo_audio = AudioFileClip(str(audio_path))
-        if fade_in > 0: vo_audio = vo_audio.audio_fadein(fade_in / 1000)
+        if fade_in  > 0: vo_audio = vo_audio.audio_fadein(fade_in / 1000)
         if fade_out > 0: vo_audio = vo_audio.audio_fadeout(fade_out / 1000)
         if video.audio and mix < 1.0:
-            final_audio = CompositeAudioClip([video.audio.volumex(1.0 - mix), vo_audio.set_start(offset).volumex(mix)])
+            final_audio = CompositeAudioClip([
+                video.audio.volumex(1.0 - mix),
+                vo_audio.set_start(offset).volumex(mix),
+            ])
         else:
             final_audio = vo_audio.set_start(offset)
-        video.set_audio(final_audio).write_videofile(str(output_path), codec="libx264", audio_codec="aac", logger=None, temp_audiofile=str(output_path.parent / "temp_audio.m4a"))
-        video.close(); vo_audio.close()
+        video.set_audio(final_audio).write_videofile(
+            str(output_path), codec="libx264", audio_codec="aac",
+            logger=None,
+            temp_audiofile=str(output_path.parent / "temp_audio.m4a"),
+        )
+        video.close()
+        vo_audio.close()
         return output_path
     except Exception as e:
         log.warning(f"Video processing failed: {e} — returning audio only")
@@ -267,32 +323,47 @@ async def process_video(video_path: Path, audio_path: Path, output_path: Path, o
 
 
 def generate_srt(text: str, wps: float = 2.5) -> str:
-    words = text.split()
-    srt, t = "", 0.0
+    words    = text.split()
+    srt_out  = ""
+    t        = 0.0
     for i in range(0, len(words), 8):
-        chunk = " ".join(words[i:i+8])
-        dur = len(chunk.split()) / wps
+        chunk = " ".join(words[i:i + 8])
+        dur   = len(chunk.split()) / wps
         s1, s2 = t, t + dur
-        fmt = lambda s: f"{int(s//3600):02d}:{int((s%3600)//60):02d}:{int(s%60):02d},{int((s%1)*1000):03d}"
-        srt += f"{i//8+1}\n{fmt(s1)} --> {fmt(s2)}\n{chunk}\n\n"
+        fmt = lambda s: (
+            f"{int(s//3600):02d}:{int((s%3600)//60):02d}:"
+            f"{int(s%60):02d},{int((s%1)*1000):03d}"
+        )
+        srt_out += f"{i//8+1}\n{fmt(s1)} --> {fmt(s2)}\n{chunk}\n\n"
         t = s2
-    return srt
+    return srt_out
 
 
 async def translate_text(text: str, target_lang: str) -> str:
     lang_names = {
-        "en": "English", "nl": "Dutch", "de": "German", "fr": "French",
-        "es": "Spanish", "pt": "Portuguese", "it": "Italian", "ar": "Arabic",
-        "ja": "Japanese", "tr": "Turkish"
+        "en": "English", "nl": "Dutch",    "de": "German",
+        "fr": "French",  "es": "Spanish",  "pt": "Portuguese",
+        "it": "Italian", "ar": "Arabic",   "ja": "Japanese", "tr": "Turkish",
     }
-    prompt = f"Translate to {lang_names.get(target_lang, target_lang)}. Return ONLY the translation:\n\n{text}"
+    prompt = (
+        f"Translate to {lang_names.get(target_lang, target_lang)}. "
+        f"Return ONLY the translation:\n\n{text}"
+    )
     if ANTHROPIC_API_KEY:
         try:
             async with httpx.AsyncClient(timeout=20) as client:
                 r = await client.post(
                     "https://api.anthropic.com/v1/messages",
-                    headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-                    json={"model": "claude-haiku-4-5-20251001", "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
+                    headers={
+                        "x-api-key": ANTHROPIC_API_KEY,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json={
+                        "model": "claude-haiku-4-5-20251001",
+                        "max_tokens": 1024,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
                 )
                 r.raise_for_status()
                 return r.json()["content"][0]["text"].strip()
@@ -302,7 +373,9 @@ async def translate_text(text: str, target_lang: str) -> str:
         try:
             import openai
             r = await openai.AsyncOpenAI(api_key=OPENAI_API_KEY).chat.completions.create(
-                model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], max_tokens=512
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=512,
             )
             return r.choices[0].message.content.strip()
         except Exception as e:
@@ -313,23 +386,39 @@ async def translate_text(text: str, target_lang: str) -> str:
 async def score_hooks(hooks: list[str], niche: str) -> list[dict]:
     if not hooks:
         return []
-    prompt = f"Score these {len(hooks)} hooks for a {niche} video.\n\nHooks:\n{json.dumps(hooks)}\n\nReturn ONLY a JSON array of {len(hooks)} objects each with: score (1-100), reason (string), tags (array of strings)."
+    prompt = (
+        f"Score these {len(hooks)} hooks for a {niche} video.\n\n"
+        f"Hooks:\n{json.dumps(hooks)}\n\n"
+        f"Return ONLY a JSON array of {len(hooks)} objects each with: "
+        f"score (1-100), reason (string), tags (array of strings)."
+    )
     try:
         if ANTHROPIC_API_KEY:
             async with httpx.AsyncClient(timeout=20) as client:
                 r = await client.post(
                     "https://api.anthropic.com/v1/messages",
-                    headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-                    json={"model": "claude-haiku-4-5-20251001", "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}]}
+                    headers={
+                        "x-api-key": ANTHROPIC_API_KEY,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json={
+                        "model": "claude-haiku-4-5-20251001",
+                        "max_tokens": 1024,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
                 )
                 r.raise_for_status()
-                content = r.json()["content"][0]["text"]
+                content    = r.json()["content"][0]["text"]
                 start, end = content.find("["), content.rfind("]") + 1
                 if start >= 0:
                     return json.loads(content[start:end])
     except Exception as e:
         log.warning(f"Hook scoring failed: {e}")
-    return [{"score": 70 + (i * 3 % 20), "reason": "AI scoring unavailable", "tags": ["hook"]} for i, _ in enumerate(hooks)]
+    return [
+        {"score": 70 + (i * 3 % 20), "reason": "AI scoring unavailable", "tags": ["hook"]}
+        for i, _ in enumerate(hooks)
+    ]
 
 
 async def cleanup_session_files(session_dir: Path, delay: int = 3600):
@@ -342,47 +431,69 @@ async def cleanup_session_files(session_dir: Path, delay: int = 3600):
 #  ROUTES
 # ═══════════════════════════════════════════════
 
+@app.get("/")
+async def root():
+    """Serve the frontend index.html."""
+    index_path = STATIC_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+    return JSONResponse(
+        {"status": "ok", "message": "Backend running — place index.html in /static"},
+        status_code=200,
+    )
+
+
 @app.get("/health")
 async def health():
     tts_status = "gtts-fallback"
     if ELEVENLABS_KEY:
         try:
             async with httpx.AsyncClient(timeout=3) as c:
-                r = await c.get("https://api.elevenlabs.io/v1/user", headers={"xi-api-key": ELEVENLABS_KEY})
+                r = await c.get(
+                    "https://api.elevenlabs.io/v1/user",
+                    headers={"xi-api-key": ELEVENLABS_KEY},
+                )
                 tts_status = "elevenlabs" if r.status_code == 200 else "fallback"
         except:
             tts_status = "fallback"
     elif OPENAI_API_KEY:
         tts_status = "openai"
     return {
-        "status": "ok",
+        "status":  "ok",
         "version": "2.0.0",
-        "tts": tts_status,
-        "engines": [k for k, v in {"elevenlabs": ELEVENLABS_KEY, "openai": OPENAI_API_KEY, "anthropic": ANTHROPIC_API_KEY}.items() if v]
+        "tts":     tts_status,
+        "engines": [
+            k for k, v in {
+                "elevenlabs": ELEVENLABS_KEY,
+                "openai":     OPENAI_API_KEY,
+                "anthropic":  ANTHROPIC_API_KEY,
+            }.items() if v
+        ],
     }
 
 
 @app.post("/upload")
 async def upload(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    niche: str = Form("general"),
-    voice: str = Form("us_clear"),
-    offset: float = Form(0.0),
-    mix: float = Form(0.5),
-    speed: float = Form(1.0),
-    pitch: float = Form(0.0),
-    script: Optional[str] = Form(None),
-    emotion: Optional[str] = Form(None),
-    brand_voice: Optional[str] = Form(None),
-    fade_in: int = Form(0),
-    fade_out: int = Form(0),
-    bgm_duck: float = Form(0.2),
-    target_lang: Optional[str] = Form(None),
-    pause_rules: Optional[str] = Form(None),
-    preset: Optional[str] = Form(None),
+    file:         UploadFile     = File(...),
+    niche:        str            = Form("general"),
+    voice:        str            = Form("us_clear"),
+    offset:       float          = Form(0.0),
+    mix:          str            = Form("80"),   # accepts 0-100 or 0.0-1.0
+    speed:        float          = Form(1.0),
+    pitch:        float          = Form(0.0),
+    script:       Optional[str]  = Form(None),
+    emotion:      Optional[str]  = Form(None),
+    brand_voice:  Optional[str]  = Form(None),
+    fade_in:      int            = Form(0),
+    fade_out:     int            = Form(0),
+    bgm_duck:     float          = Form(0.2),
+    target_lang:  Optional[str]  = Form(None),
+    pause_rules:  Optional[str]  = Form(None),
+    preset:       Optional[str]  = Form(None),
 ):
-    session_id = str(uuid.uuid4())
+    mix_float   = normalize_mix(mix)
+    session_id  = str(uuid.uuid4())
     session_dir = STATIC_DIR / session_id
     session_dir.mkdir(parents=True, exist_ok=True)
 
@@ -391,8 +502,9 @@ async def upload(
         shutil.copyfileobj(file.file, f)
 
     hooks = await generate_hooks(
-        f"A {niche} video '{file.filename}'" + (f" with script: {script[:200]}" if script else ""),
-        niche, script
+        f"A {niche} video '{file.filename}'"
+        + (f" with script: {script[:200]}" if script else ""),
+        niche, script,
     )
     vo_text = script if script else hooks[0]
 
@@ -407,7 +519,7 @@ async def upload(
 
     result_path = await process_video(
         video_path, audio_path, session_dir / "output.mp4",
-        offset=offset, mix=mix, fade_in=fade_in, fade_out=fade_out
+        offset=offset, mix=mix_float, fade_in=fade_in, fade_out=fade_out,
     )
     has_video = result_path.suffix == ".mp4"
 
@@ -415,70 +527,86 @@ async def upload(
     srt_path.write_text(generate_srt(vo_text), encoding="utf-8")
 
     sessions.create(session_id, {
-        "session_id": session_id, "niche": niche, "voice": voice,
-        "hooks": hooks, "hook_text": hooks[0], "all_hooks": hooks,
-        "script": vo_text, "video_path": str(video_path),
-        "audio_path": str(audio_path), "output_path": str(result_path),
-        "srt_path": str(srt_path)
+        "session_id":  session_id,
+        "niche":       niche,
+        "voice":       voice,
+        "hooks":       hooks,
+        "hook_text":   hooks[0],
+        "all_hooks":   hooks,
+        "script":      vo_text,
+        "video_path":  str(video_path),
+        "audio_path":  str(audio_path),
+        "output_path": str(result_path),
+        "srt_path":    str(srt_path),
     })
-    background_tasks.add_task(cleanup_session_files, session_dir, delay=SESSION_TTL_HOURS * 3600)
+    background_tasks.add_task(
+        cleanup_session_files, session_dir, delay=SESSION_TTL_HOURS * 3600
+    )
 
     base = f"/static/{session_id}"
     return {
-        "session_id": session_id,
-        "all_hooks": hooks,
-        "hook_text": hooks[0],
-        "download_url": f"{base}/output.mp4" if has_video else f"{base}/voiceover.mp3",
+        "session_id":        session_id,
+        "all_hooks":         hooks,
+        "hook_text":         hooks[0],
+        "download_url":      f"{base}/output.mp4" if has_video else f"{base}/voiceover.mp3",
         "audio_preview_url": f"{base}/voiceover.mp3",
-        "srt_url": f"{base}/subtitles.srt",
-        "voice": voice,
-        "word_count": len(vo_text.split())
+        "srt_url":           f"{base}/subtitles.srt",
+        "voice":             voice,
+        "word_count":        len(vo_text.split()),
     }
 
 
 @app.post("/apply-hook")
 async def apply_hook(
-    session_id: str = Form(...),
-    hook_index: int = Form(0),
-    voice: str = Form("us_clear"),
-    offset: float = Form(0.0),
-    mix: float = Form(0.5),
-    fade_in: int = Form(0),
-    fade_out: int = Form(0),
+    session_id:  str   = Form(...),
+    hook_index:  int   = Form(0),
+    voice:       str   = Form("us_clear"),
+    offset:      float = Form(0.0),
+    mix:         str   = Form("80"),
+    fade_in:     int   = Form(0),
+    fade_out:    int   = Form(0),
 ):
-    session = sessions.get(session_id)
+    mix_float = normalize_mix(mix)
+    session   = sessions.get(session_id)
     if not session:
         raise HTTPException(404, f"Session '{session_id}' not found")
     hooks = session.get("hooks", [])
     if not hooks:
         raise HTTPException(400, "No hooks found in session")
-    hook_index = max(0, min(hook_index, len(hooks) - 1))
-    hook_text = hooks[hook_index]
+
+    hook_index  = max(0, min(hook_index, len(hooks) - 1))
+    hook_text   = hooks[hook_index]
     session_dir = STATIC_DIR / session_id
-    audio_path = session_dir / f"voiceover_h{hook_index}.mp3"
+    audio_path  = session_dir / f"voiceover_h{hook_index}.mp3"
+
     await generate_tts(hook_text, voice, audio_path)
     result_path = await process_video(
         Path(session["video_path"]), audio_path,
         session_dir / f"output_h{hook_index}.mp4",
-        offset=offset, mix=mix, fade_in=fade_in, fade_out=fade_out
+        offset=offset, mix=mix_float, fade_in=fade_in, fade_out=fade_out,
     )
     srt_path = session_dir / f"subtitles_h{hook_index}.srt"
     srt_path.write_text(generate_srt(hook_text), encoding="utf-8")
     sessions.update(session_id, {"applied_hook": hook_index, "current_voice": voice})
-    base = f"/static/{session_id}"
+
+    base      = f"/static/{session_id}"
     has_video = result_path.suffix == ".mp4"
     return {
-        "session_id": session_id,
-        "hook_index": hook_index,
-        "hook_text": hook_text,
-        "download_url": f"{base}/output_h{hook_index}.mp4" if has_video else f"{base}/voiceover_h{hook_index}.mp3",
+        "session_id":        session_id,
+        "hook_index":        hook_index,
+        "hook_text":         hook_text,
+        "download_url":      f"{base}/output_h{hook_index}.mp4" if has_video else f"{base}/voiceover_h{hook_index}.mp3",
         "audio_preview_url": f"{base}/voiceover_h{hook_index}.mp3",
-        "srt_url": f"{base}/subtitles_h{hook_index}.srt"
+        "srt_url":           f"{base}/subtitles_h{hook_index}.srt",
     }
 
 
 @app.post("/translate")
-async def translate(text: str = Form(...), target: str = Form("en"), source: str = Form("auto")):
+async def translate(
+    text:   str = Form(...),
+    target: str = Form("en"),
+    source: str = Form("auto"),
+):
     if not text.strip():
         raise HTTPException(400, "Empty text provided")
     return {"translated": await translate_text(text, target), "target": target}
@@ -503,7 +631,10 @@ async def delete_session(session_id: str, background_tasks: BackgroundTasks):
 
 
 @app.post("/score-hooks")
-async def score_hooks_endpoint(hooks: str = Form(...), niche: str = Form("general")):
+async def score_hooks_endpoint(
+    hooks: str = Form(...),
+    niche: str = Form("general"),
+):
     try:
         hook_list = json.loads(hooks)
         if not isinstance(hook_list, list):
@@ -526,5 +657,9 @@ async def list_voices():
             {"id": "deep",      "name": "Deep",       "flag": "🔊"},
             {"id": "warm",      "name": "Warm",       "flag": "☀️"},
         ],
-        "tts_engine": "elevenlabs" if ELEVENLABS_KEY else "openai" if OPENAI_API_KEY else "gtts"
+        "tts_engine": (
+            "elevenlabs" if ELEVENLABS_KEY
+            else "openai" if OPENAI_API_KEY
+            else "gtts"
+        ),
     }
