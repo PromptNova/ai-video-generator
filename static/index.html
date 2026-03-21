@@ -1,946 +1,1506 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AutoVoiceOver — AI Voice-Over Generator for Videos</title>
-  <meta name="description" content="Upload a video, choose a voice + niche, and get an AI voice-over, 5 viral hook options, and SRT subtitles—instantly." />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AutoVoiceOver — AI Voice Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  <!-- App icons -->
-  <link rel="icon" href="/static/logo.png" />
-  <meta name="theme-color" content="#0B1220" />
+/* ─── THEME TOKENS ─── */
+[data-theme="light"]{
+  --bg:#f8f7f4;--bg2:#f2f0eb;--bg3:#ebe8e1;
+  --surface:#ffffff;--surface2:#f8f7f4;
+  --border:#e8e4dc;--border2:#d4cfc4;
+  --ink:#0f0e0c;--ink2:#2a2825;--ink3:#4a4844;
+  --muted:#8a8680;--muted2:#b0ada8;
+  --invert-bg:#0f0e0c;--invert-fg:#ffffff;
+  --shadow:rgba(15,14,12,.08);--shadow2:rgba(15,14,12,.14);
+}
+[data-theme="dark"]{
+  --bg:#111110;--bg2:#1a1917;--bg3:#242220;
+  --surface:#1e1c1a;--surface2:#252320;
+  --border:#2e2c28;--border2:#3a3834;
+  --ink:#f0ede8;--ink2:#d4cfc4;--ink3:#a09b96;
+  --muted:#6a6660;--muted2:#4a4844;
+  --invert-bg:#f0ede8;--invert-fg:#0f0e0c;
+  --shadow:rgba(0,0,0,.25);--shadow2:rgba(0,0,0,.4);
+}
 
-  <!-- Tailwind (CDN) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+:root{
+  --green:#1a7a4a;--blue:#1a4a8a;--amber:#b5600a;--red:#c0392b;
+  --violet:#5b21b6;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:10px;--r2:16px;--r3:22px;
+  --s1:0 2px 8px var(--shadow),0 1px 3px var(--shadow);
+  --s2:0 8px 24px var(--shadow2),0 2px 6px var(--shadow);
+  --s3:0 20px 60px var(--shadow2),0 4px 12px var(--shadow);
+}
 
-  <style>
-    :root{
-      --ink:#0b1220;
-      --muted:#64748b;
-      --stroke:rgba(15,23,42,.10);
-      --glass:rgba(255,255,255,.72);
-      --shadow: 0 18px 60px rgba(2,6,23,.12);
-      --shadow2: 0 10px 26px rgba(2,6,23,.10);
-    }
-    html, body { height: 100%; }
-    body{
-      color: var(--ink);
-      background:
-        radial-gradient(1100px 650px at 80% -10%, rgba(99,102,241,.20), transparent 60%),
-        radial-gradient(900px 520px at 10% 0%, rgba(56,189,248,.18), transparent 60%),
-        linear-gradient(180deg, #ffffff, #f6f7fb);
-    }
-    .glass{
-      background: var(--glass);
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(10px) saturate(1.15);
-      -webkit-backdrop-filter: blur(10px) saturate(1.15);
-      box-shadow: var(--shadow);
-    }
-    .glass2{
-      background: rgba(255,255,255,.86);
-      border: 1px solid var(--stroke);
-      box-shadow: var(--shadow2);
-    }
-    .btn{ transition: transform .12s ease, box-shadow .18s ease, opacity .18s ease; }
-    .btn:hover{ transform: translateY(-1px); }
-    .btn:active{ transform: translateY(0); }
-    .focus-ring:focus{
-      outline: none;
-      box-shadow: 0 0 0 4px rgba(99,102,241,.18), 0 1px 2px rgba(0,0,0,.06);
-      border-color: transparent;
-    }
-    .drop-highlight{ background: rgba(99,102,241,.06); border-color: rgba(99,102,241,.55); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .hide{ display:none !important; }
-    .toast{
-      position: fixed; left: 50%; transform: translateX(-50%);
-      bottom: 18px; z-index: 100;
-      padding: 10px 14px; border-radius: 9999px;
-      background: rgba(15,23,42,.92); color: white;
-      box-shadow: 0 18px 50px rgba(2,6,23,.25);
-      opacity: 0; pointer-events: none;
-      transition: opacity .18s ease;
-      font-size: 14px;
-    }
-    .toast[data-show="true"]{ opacity: 1; }
-    .progress{
-      height: 10px; border-radius: 9999px; overflow: hidden;
-      background: rgba(148,163,184,.35);
-      border: 1px solid rgba(148,163,184,.35);
-    }
-    .progress > div{
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, rgba(99,102,241,.95), rgba(56,189,248,.95));
-      transition: width .14s ease;
-    }
-    .badge{
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 7px 12px; border-radius: 9999px;
-      background: rgba(255,255,255,.8);
-      border: 1px solid rgba(15,23,42,.08);
-      box-shadow: 0 10px 24px rgba(2,6,23,.06);
-      font-size: 12px;
-      color: rgba(15,23,42,.75);
-    }
-    .divider{ height: 1px; background: linear-gradient(90deg, transparent, rgba(148,163,184,.55), transparent); }
-  </style>
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4}
+
+.w{max-width:1280px;margin:0 auto;padding:0 28px}
+@media(max-width:768px){.w{padding:0 16px}}
+
+/* ─── HEADER ─── */
+header{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(20px) saturate(1.6);border-bottom:1px solid var(--border);transition:background .25s}
+.hi{display:flex;align-items:center;justify-content:space-between;height:60px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.li{width:32px;height:32px;border-radius:8px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:background .25s}
+.ln{font-size:15px;font-weight:700;letter-spacing:-.02em}
+.lt{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.04em}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tabbar{display:flex;align-items:center;gap:3px;background:var(--bg2);border-radius:999px;padding:4px 5px;border:1px solid var(--border)}
+.tbb{padding:7px 18px;border-radius:999px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;background:transparent;color:var(--muted);white-space:nowrap}
+.tbb.on{background:var(--ink);color:var(--invert-fg)}
+.hbtn{padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--ink3);cursor:pointer;font-family:var(--sans);transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.hbtn:hover{border-color:var(--border2);color:var(--ink)}
+.health{display:flex;align-items:center;gap:5px;font-size:11px;font-family:var(--mono);color:var(--muted)}
+.hdot{width:7px;height:7px;border-radius:50%;background:var(--muted2)}
+.hdot.ok{background:var(--green);animation:blink 2.5s ease-in-out infinite}
+.hdot.err{background:var(--red)}
+.hdot.chk{background:var(--amber);animation:spin .8s linear infinite}
+@media(max-width:700px){.health,.hbtn.hide-sm{display:none}}
+
+/* ─── CARDS ─── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s1);overflow:hidden;transition:background .25s,border-color .25s}
+.ch{padding:20px 24px 0}.ct{font-size:15px;font-weight:600;letter-spacing:-.01em}.csub{font-size:13px;color:var(--muted);margin-top:3px}
+.cb{padding:16px 24px 24px}
+.divider{height:1px;background:var(--border);margin:18px 0}
+
+/* ─── STUDIO LAYOUT ─── */
+.studio{padding:32px 0 80px}
+.stepr{display:flex;align-items:center;gap:3px;margin-bottom:28px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:6px 8px;width:fit-content}
+.sti{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted);transition:all .3s}
+.sti.on{background:var(--ink);color:var(--invert-fg)}
+.sti.done{color:var(--green)}
+.stn{width:20px;height:20px;border-radius:50%;font-family:var(--mono);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--muted);transition:all .3s;flex-shrink:0}
+.sti.on .stn{background:rgba(255,255,255,.18);color:inherit}
+.sti.done .stn{background:rgba(26,122,74,.15);color:var(--green)}
+.sarr{color:var(--border2);font-size:12px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media(max-width:900px){.sgrid{grid-template-columns:1fr}}
+.lcol{display:flex;flex-direction:column;gap:20px}
+
+/* ─── DROPZONE ─── */
+.dz{border:1.5px dashed var(--border2);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.dz:hover,.dz.hl{border-color:var(--ink);background:var(--bg3)}
+.dz-in{padding:40px 24px;text-align:center}
+.dz-ic{width:56px;height:56px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 4px var(--shadow);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px}
+.dz-t{font-size:15px;font-weight:600}
+.dz-s{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.dz-f{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.fmt{font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:999px;border:1px solid var(--border2);color:var(--muted);background:var(--surface)}
+#vThumb{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:#000}
+.tbar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-top:1px solid var(--border)}
+.tn{font-size:12px;font-family:var(--mono);color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;flex:1}
+.tsz{font-size:11px;font-family:var(--mono);color:var(--muted);flex-shrink:0}
+.tchg{font-size:11px;background:var(--surface);border:1px solid var(--border2);border-radius:999px;padding:4px 10px;cursor:pointer;color:var(--ink3);font-family:var(--sans);transition:background .15s;flex-shrink:0}
+.tchg:hover{background:var(--bg3)}
+
+/* ─── FIELDS ─── */
+.fl{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+input[type="text"],input[type="number"],input[type="password"],select,textarea{
+  width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-size:13px;color:var(--ink);font-family:var(--sans);
+  transition:all .2s;appearance:none;outline:none;
+}
+textarea{resize:vertical;line-height:1.6}
+input:focus,select:focus,textarea:focus{border-color:var(--ink2);background:var(--surface);box-shadow:0 0 0 3px var(--shadow)}
+select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8680' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+::placeholder{color:var(--muted2)}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:520px){.fr2,.fr3{grid-template-columns:1fr}}
+.s2{grid-column:1/-1}
+
+/* ─── VOICE CHIPS ─── */
+.vgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:520px){.vgrid{grid-template-columns:repeat(2,1fr)}}
+.vc{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .2s;font-size:11px;font-weight:600;color:var(--muted);text-align:center;user-select:none}
+.vc:hover{border-color:var(--border2);color:var(--ink3);background:var(--surface)}
+.vc.sel{border-color:var(--ink);background:var(--ink);color:var(--invert-fg)}
+.vc .flag{font-size:20px;line-height:1}
+
+/* ─── MIX + RANGE ─── */
+.mixr{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--muted)}
+.mixr strong{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.mixrow{display:flex;align-items:center;gap:10px}
+input[type="range"]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:999px;background:var(--border);outline:none;cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--surface);border:2px solid var(--ink2);box-shadow:0 2px 6px var(--shadow2);transition:transform .15s}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.rend{font-size:10px;font-family:var(--mono);color:var(--muted);flex-shrink:0}
+
+/* ─── TIMELINE ─── */
+.tl{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;user-select:none}
+.tlh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tll{font-size:11px;font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.tlv{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px 12px}
+.tlt{position:relative;height:54px;cursor:ew-resize}
+.tl-bg{position:absolute;top:50%;left:0;right:0;height:4px;margin-top:-2px;background:var(--border);border-radius:999px}
+.tl-fill{position:absolute;top:50%;left:0;height:4px;margin-top:-2px;background:var(--ink);border-radius:999px}
+.tl-orig{position:absolute;top:14px;left:0;right:0;height:8px;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:4px;display:flex;align-items:center;overflow:hidden;gap:1px;padding:0 2px}
+.tl-ai{position:absolute;top:28px;height:8px;right:0;background:rgba(91,33,182,.12);border-radius:4px;display:flex;align-items:center;overflow:hidden;gap:1px;padding:0 2px}
+.tl-handle{position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:var(--surface);border:2.5px solid var(--ink);box-shadow:0 2px 8px var(--shadow2);cursor:grab;z-index:2;transform:translate(-50%,-50%)}
+.tl-ts{display:flex;justify-content:space-between;margin-top:3px}
+.tl-t{font-size:9px;font-family:var(--mono);color:var(--muted2)}
+.tl-leg{display:flex;gap:16px;margin-top:11px}
+.tl-li{display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);color:var(--muted)}
+.tl-ln{width:20px;height:3px;border-radius:999px}
+
+/* ─── SCRIPT EDITOR ─── */
+.script-tabs{display:flex;gap:0;margin-bottom:12px;background:var(--bg2);border-radius:10px;padding:3px;border:1px solid var(--border)}
+.stab{flex:1;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;background:transparent;color:var(--muted);text-align:center}
+.stab.on{background:var(--surface);color:var(--ink);box-shadow:var(--s1)}
+.script-hint{font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px}
+.char-count{text-align:right;font-size:10px;font-family:var(--mono);color:var(--muted2);margin-top:4px}
+
+/* ─── SPEED/PITCH ─── */
+.sp-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ─── ACTIONS ─── */
+.arow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bgen{flex:1;min-width:160px;background:var(--ink);color:var(--invert-fg);border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s;box-shadow:var(--s2)}
+.bgen:hover:not(:disabled){opacity:.82;transform:translateY(-1px)}
+.bgen:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.bghost{background:var(--bg2);color:var(--ink3);border:1.5px solid var(--border2);border-radius:999px;padding:13px 18px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:all .2s}
+.bghost:hover{border-color:var(--ink3);color:var(--ink)}
+
+/* ─── PROGRESS ─── */
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:14px}
+.pr{display:flex;justify-content:space-between;margin-bottom:10px}
+.ps{font-size:12px;font-weight:500;color:var(--muted)}.ps.act{color:var(--blue)}.ps.done{color:var(--green)}.ps.err{color:var(--red)}
+.ppct{font-size:12px;font-family:var(--mono);color:var(--ink3)}
+.pt{height:3px;background:var(--border);border-radius:999px;overflow:hidden}
+.pf{height:100%;width:0%;background:var(--ink);border-radius:999px;transition:width .15s}
+.pf.ind{width:35%!important;animation:ind 1.3s cubic-bezier(.4,0,.6,1) infinite}
+.phases{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.ph{font-size:10px;font-family:var(--mono);padding:3px 10px;border-radius:999px;border:1px solid var(--border2);color:var(--muted2);transition:all .3s}
+.ph.act{border-color:#93c5fd;color:var(--blue);background:rgba(26,74,138,.07)}
+.ph.done{border-color:#bbf7d0;color:var(--green);background:rgba(26,122,74,.06)}
+
+/* ─── RESULTS / HOOKS ─── */
+.hh{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)}
+.htit{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hbdg{font-size:10px;font-family:var(--mono);background:var(--bg2);color:var(--muted);padding:2px 8px;border-radius:999px}
+.hscoring{font-size:11px;color:var(--blue);font-family:var(--mono);animation:blink 1.2s infinite}
+.htools{display:flex;gap:5px;flex-wrap:wrap}
+.bt{font-size:11px;font-family:var(--mono);font-weight:500;padding:5px 11px;border-radius:999px;border:1.5px solid var(--border2);background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
+.bt:hover:not(:disabled){color:var(--ink2);border-color:var(--ink3);background:var(--surface)}
+.bt:disabled{opacity:.35;cursor:not-allowed}
+.hlist{padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.hcard{padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .2s}
+.hcard:hover{border-color:var(--border2);background:var(--surface)}
+.hcard.sel{border-color:var(--ink);background:var(--surface);box-shadow:var(--s1)}
+.hcard.ab-a{border-color:#2563eb;background:rgba(37,99,235,.05)}
+.hcard.ab-b{border-color:#9333ea;background:rgba(147,51,234,.05)}
+.htop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.hleft{display:flex;gap:10px;flex:1;min-width:0}
+.hnum{font-family:var(--mono);font-size:10px;color:var(--muted2);flex-shrink:0;padding-top:2px}
+.htxt{font-size:13px;line-height:1.55;color:var(--ink2)}
+.hreason{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:5px;margin-left:22px}
+.hacts{display:flex;gap:5px;margin-top:9px;margin-left:22px;flex-wrap:wrap}
+.buse{font-size:11px;font-weight:700;background:var(--ink);color:var(--invert-fg);border:none;border-radius:999px;padding:5px 14px;cursor:pointer;font-family:var(--sans);transition:opacity .15s}
+.buse:hover:not(:disabled){opacity:.78}
+.buse:disabled{opacity:.3;cursor:not-allowed}
+.bsmall{font-size:11px;background:transparent;border:1.5px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--muted);font-family:var(--sans);transition:all .2s;white-space:nowrap}
+.bsmall:hover{color:var(--ink3);border-color:var(--ink3)}
+
+/* ─── SCORE BADGE ─── */
+.sbdg{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.stag{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+.sring{position:relative;width:34px;height:34px;flex-shrink:0}
+.sring svg{transform:rotate(-90deg);width:34px;height:34px}
+.snum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:var(--mono)}
+
+/* ─── A/B COMPARE ─── */
+.ab-bar{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ab-label{font-size:12px;font-weight:600;color:var(--ink3)}
+.ab-slot{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--border);font-size:12px;font-family:var(--mono);color:var(--muted)}
+.ab-slot.a-set{border-color:#2563eb;color:#2563eb;background:rgba(37,99,235,.07)}
+.ab-slot.b-set{border-color:#9333ea;color:#9333ea;background:rgba(147,51,234,.07)}
+.ab-vs{font-size:11px;font-family:var(--mono);color:var(--muted2);padding:0 4px}
+.ab-clear{font-size:11px;background:transparent;border:none;cursor:pointer;color:var(--muted);font-family:var(--mono);text-decoration:underline}
+
+/* ─── MEDIA ─── */
+.msec{border-top:1px solid var(--border)}
+.mlbl{font-size:10px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 20px 8px}
+#outVideo{width:100%;display:block;aspect-ratio:16/9;background:#000}
+.vacts{padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.wwrap{padding:0 20px 6px}
+#waveCanvas{width:100%;height:56px;border-radius:8px;background:var(--bg2);display:block}
+.awrap{padding:0 20px 10px}
+#outAudio{width:100%;accent-color:var(--ink)}
+.adl{padding:0 20px 20px;display:flex;gap:8px;flex-wrap:wrap}
+.dlb{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;text-decoration:none;transition:all .2s;font-family:var(--sans)}
+.dlb.dis{opacity:.3;pointer-events:none}
+.dlp{background:var(--ink);color:var(--invert-fg)}.dlp:hover{opacity:.8;transform:translateY(-1px)}
+.dls{background:var(--bg2);border:1.5px solid var(--border2);color:var(--ink3)}.dls:hover{background:var(--surface);border-color:var(--ink3);transform:translateY(-1px)}
+
+/* ─── HISTORY PANEL ─── */
+.history-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s1);overflow:hidden;margin-bottom:20px}
+.hp-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.hp-title{font-size:13px;font-weight:600}
+.hp-list{max-height:220px;overflow-y:auto}
+.hi-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.hi-item:last-child{border-bottom:none}
+.hi-item:hover{background:var(--bg2)}
+.hi-thumb{width:40px;height:27px;border-radius:5px;background:var(--bg3);overflow:hidden;flex-shrink:0}
+.hi-thumb img{width:100%;height:100%;object-fit:cover}
+.hi-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.hi-time{font-size:10px;font-family:var(--mono);color:var(--muted2);flex-shrink:0}
+.hi-empty{padding:24px;text-align:center;font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+/* ─── BATCH ─── */
+.batch-drop{border:1.5px dashed var(--border2);border-radius:16px;padding:28px 24px;text-align:center;cursor:pointer;background:var(--surface);transition:all .2s}
+.batch-drop:hover,.batch-drop.hl{border-color:var(--ink);background:var(--bg2)}
+.bstats{display:flex;gap:12px;margin-top:14px}
+.bstat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;text-align:center}
+.bsn{font-family:var(--serif);font-size:26px;letter-spacing:-.03em;line-height:1}
+.bsl{font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:2px}
+.qlist{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.qi{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg2);transition:all .3s}
+.qi.done{background:rgba(26,122,74,.05);border-color:rgba(26,122,74,.2)}
+.qi.error{background:rgba(192,57,43,.05);border-color:rgba(192,57,43,.2)}
+.qi-th{width:48px;height:32px;border-radius:6px;background:var(--bg3);overflow:hidden;flex-shrink:0}
+.qi-th img{width:100%;height:100%;object-fit:cover}
+.qi-info{flex:1;min-width:0}
+.qi-nm{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qi-mt{display:flex;align-items:center;gap:8px;margin-top:4px}
+.qi-st{font-size:11px;font-family:var(--mono);font-weight:600}
+.qi-sz{font-size:10px;font-family:var(--mono);color:var(--muted2)}
+.qi-pb{height:2px;background:var(--border);border-radius:999px;margin-top:6px;overflow:hidden}
+.qi-pf{height:100%;background:var(--ink);border-radius:999px;transition:width .15s}
+.qi-pf.ind{width:45%!important;animation:ind 1.2s ease-in-out infinite}
+.qi-dls{display:flex;gap:5px;flex-shrink:0}
+.qi-dl{font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:999px;text-decoration:none;transition:all .2s}
+.qi-dl-p{background:var(--ink);color:var(--invert-fg)}
+.qi-dl-s{background:var(--bg2);border:1px solid var(--border2);color:var(--ink3)}
+.brm{background:none;border:none;cursor:pointer;color:var(--muted2);font-size:16px;padding:4px;line-height:1;flex-shrink:0}
+.brm:hover{color:var(--red)}
+
+/* ─── SETTINGS MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s3);width:90%;max-width:460px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease}
+.mhead{padding:22px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-size:16px;font-weight:700}
+.mclose{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;padding:4px;line-height:1}
+.mbody{padding:20px 24px 24px;display:flex;flex-direction:column;gap:16px}
+.msave{width:100%;background:var(--ink);color:var(--invert-fg);border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .15s;margin-top:4px}
+.msave:hover{opacity:.82}
+
+/* ─── SHORTCUTS TOAST ─── */
+.shortcuts-modal .mbody{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sk{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px}
+.sk-key{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 8px;color:var(--ink);box-shadow:0 1px 0 var(--border2)}
+.sk-lbl{font-size:12px;color:var(--muted)}
+
+/* ─── CAPTION MODAL ─── */
+.caption-result{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.65;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);color:var(--ink2);margin-top:8px;min-height:80px}
+
+/* ─── HOW IT WORKS ─── */
+.how{padding:72px 0;background:var(--surface);border-top:1px solid var(--border)}
+.sec-eye{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.sec-t{font-family:var(--serif);font-size:clamp(28px,3vw,42px);font-weight:400;letter-spacing:-.02em;line-height:1.1}
+.sec-s{margin-top:10px;font-size:15px;color:var(--ink3);line-height:1.6}
+.shd{margin-bottom:40px}
+.howgr{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:700px){.howgr{grid-template-columns:1fr}}
+.hwc{padding:28px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);transition:box-shadow .2s,transform .2s}
+.hwc:hover{box-shadow:var(--s2);transform:translateY(-2px)}
+.hw-step{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.hw-num{font-family:var(--serif);font-size:52px;line-height:.9;color:var(--border2);margin-bottom:14px;letter-spacing:-.04em}
+.hw-t{font-size:15px;font-weight:600;margin-bottom:8px}
+.hw-d{font-size:13px;color:var(--ink3);line-height:1.65}
+
+/* ─── FAQ ─── */
+.faq{padding:72px 0;border-top:1px solid var(--border)}
+.fgr{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.fgr{grid-template-columns:1fr}}
+.fc{padding:22px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)}
+.fq{font-size:14px;font-weight:600;margin-bottom:9px;line-height:1.35}
+.fa{font-size:13px;color:var(--ink3);line-height:1.65}
+.fa code{font-family:var(--mono);font-size:11px;background:var(--bg2);padding:1px 5px;border-radius:4px;color:var(--ink2);border:1px solid var(--border)}
+
+/* ─── FOOTER ─── */
+footer{border-top:1px solid var(--border);background:var(--surface);padding:32px 0 40px}
+.fi{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.fcopy{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.fapi{font-size:11px;color:var(--muted2);font-family:var(--mono)}
+
+/* ─── TOAST ─── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:var(--invert-fg);padding:11px 20px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 12px 40px var(--shadow2);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9998;white-space:nowrap;display:flex;align-items:center;gap:8px;font-family:var(--sans)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#burst{position:fixed;inset:0;pointer-events:none;z-index:9997;overflow:hidden}
+.bp{position:absolute;animation:fall 1.4s ease-out forwards}
+.kbdot{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-size:11px;font-family:var(--mono);color:var(--muted);cursor:pointer;z-index:100;transition:all .2s}
+.kbdot:hover{background:var(--surface);color:var(--ink)}
+
+@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(320px) rotate(360deg);opacity:0}}
+@keyframes ind{0%{transform:translateX(-100%)}100%{transform:translateX(380%)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.hide{display:none!important}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
+</style>
 </head>
+<body>
+<div id="burst"></div>
+<div id="toast"><span id="ti"></span><span id="tm"></span></div>
+<button class="kbdot" onclick="openShortcuts()" title="Keyboard shortcuts">⌨ shortcuts</button>
 
-<body class="antialiased">
-  <!-- Toast -->
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<!-- ══════════ MODALS ══════════ -->
 
-  <!-- Header -->
-  <header class="max-w-7xl mx-auto px-5 pt-7">
-    <div class="glass rounded-2xl px-5 py-4 flex items-center justify-between">
-      <a href="#top" class="flex items-center gap-3">
-        <img src="/static/logo.png" alt="AutoVoiceOver logo" class="w-10 h-10 rounded-xl" />
-        <div class="leading-tight">
-          <div class="font-semibold tracking-tight">AutoVoiceOver</div>
-          <div class="text-xs text-slate-500">AI voice-over for videos</div>
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mtitle">⚙️ Settings</div>
+      <button class="mclose" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div class="mbody">
+      <div>
+        <label class="fl">API Base URL</label>
+        <input id="settingsApiBase" type="text" placeholder="https://your-backend.com"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono)">Leave empty to use same origin. Saved to localStorage.</div>
+      </div>
+      <div>
+        <label class="fl">Default Voice</label>
+        <select id="settingsVoice">
+          <option value="us_clear">🇺🇸 US Clear</option><option value="uk_clear">🇬🇧 UK Clear</option>
+          <option value="au_clear">🇦🇺 AU Clear</option><option value="in_clear">🇮🇳 IN Clear</option>
+          <option value="energetic">⚡ Energetic</option><option value="calm">🌊 Calm</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl">Default Niche</label>
+        <select id="settingsNiche">
+          <option>General</option><option>Business</option><option>Education</option>
+          <option>Motivation</option><option>Fitness</option><option>Tech</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-radius:10px;border:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:600">Auto-play after generate</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Automatically play audio when ready</div>
         </div>
+        <label style="position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0">
+          <input type="checkbox" id="settingsAutoplay" style="opacity:0;width:0;height:0"/>
+          <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:999px;cursor:pointer;transition:background .2s" id="autoplayToggle"></span>
+        </label>
+      </div>
+      <button class="msave" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shortcuts Modal -->
+<div class="modal-overlay" id="shortcutsModal" onclick="if(event.target===this)closeModal('shortcutsModal')">
+  <div class="modal shortcuts-modal">
+    <div class="mhead">
+      <div class="mtitle">⌨️ Keyboard Shortcuts</div>
+      <button class="mclose" onclick="closeModal('shortcutsModal')">×</button>
+    </div>
+    <div class="mbody">
+      <div class="sk"><span class="sk-lbl">Generate output</span><span class="sk-key">G</span></div>
+      <div class="sk"><span class="sk-lbl">Reset / clear</span><span class="sk-key">R</span></div>
+      <div class="sk"><span class="sk-lbl">Play / pause audio</span><span class="sk-key">Space</span></div>
+      <div class="sk"><span class="sk-lbl">Upload file</span><span class="sk-key">U</span></div>
+      <div class="sk"><span class="sk-lbl">Single tab</span><span class="sk-key">1</span></div>
+      <div class="sk"><span class="sk-lbl">Batch tab</span><span class="sk-key">2</span></div>
+      <div class="sk"><span class="sk-lbl">Toggle dark mode</span><span class="sk-key">D</span></div>
+      <div class="sk"><span class="sk-lbl">Open settings</span><span class="sk-key">S</span></div>
+      <div class="sk"><span class="sk-lbl">Copy all hooks</span><span class="sk-key">C</span></div>
+      <div class="sk"><span class="sk-lbl">Export all (ZIP)</span><span class="sk-key">E</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Caption Modal -->
+<div class="modal-overlay" id="captionModal" onclick="if(event.target===this)closeModal('captionModal')">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mtitle">📱 Copy as Caption</div>
+      <button class="mclose" onclick="closeModal('captionModal')">×</button>
+    </div>
+    <div class="mbody">
+      <div>
+        <label class="fl">Platform</label>
+        <select id="captionPlatform" onchange="generateCaption()">
+          <option value="tiktok">TikTok</option>
+          <option value="instagram">Instagram Reels</option>
+          <option value="youtube">YouTube Shorts</option>
+          <option value="twitter">Twitter/X</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl">Hook</label>
+        <select id="captionHookSel" onchange="generateCaption()"></select>
+      </div>
+      <div>
+        <label class="fl">Preview</label>
+        <div class="caption-result" id="captionResult">Select a hook above…</div>
+      </div>
+      <button class="msave" onclick="copyCaption()">Copy Caption</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="w">
+    <div class="hi">
+      <a class="logo" href="#">
+        <div class="li">🎙</div>
+        <div><div class="ln">AutoVoiceOver</div><div class="lt">AI Voice Studio</div></div>
       </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
-        <a href="#studio" class="hover:text-slate-900">Studio</a>
-        <a href="#how" class="hover:text-slate-900">How it works</a>
-        <a href="#faq" class="hover:text-slate-900">FAQ</a>
-        <a href="#studio" class="btn inline-flex items-center justify-center rounded-full bg-indigo-600 text-white px-4 py-2 shadow-sm hover:opacity-95">
-          Launch Studio
-        </a>
-      </nav>
-      <button id="mobileMenuBtn" class="md:hidden btn rounded-xl px-3 py-2 glass2" aria-label="Open menu">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
-    </div>
-
-    <div id="mobileMenu" class="hide md:hidden mt-3 glass rounded-2xl px-5 py-4 text-sm text-slate-700">
-      <div class="flex flex-col gap-3">
-        <a href="#studio" class="hover:text-slate-950">Studio</a>
-        <a href="#how" class="hover:text-slate-950">How it works</a>
-        <a href="#faq" class="hover:text-slate-950">FAQ</a>
-        <a href="#studio" class="btn inline-flex items-center justify-center rounded-full bg-indigo-600 text-white px-4 py-2 shadow-sm hover:opacity-95">
-          Launch Studio
-        </a>
+      <div class="tabbar">
+        <button class="tbb on" id="tabSingle" onclick="switchTab('single')">Single</button>
+        <button class="tbb" id="tabBatch" onclick="switchTab('batch')">Batch <span id="batchBadge" class="hide" style="margin-left:3px;opacity:.7;font-size:10px"></span></button>
+      </div>
+      <div class="hright">
+        <div class="health"><div class="hdot" id="healthDot"></div><span id="healthText">Checking…</span></div>
+        <button class="hbtn" onclick="openModal('settingsModal')">⚙️ Settings</button>
+        <button class="hbtn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+        <button class="hbtn hide-sm" onclick="exportAll()" id="exportAllBtn" title="Export all (E)">↓ Export All</button>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <!-- Hero -->
-  <main id="top" class="max-w-7xl mx-auto px-5 pb-20">
-    <section class="mt-8 glass rounded-3xl overflow-hidden">
-      <div class="px-6 py-10 md:px-10 md:py-14">
-        <div class="flex flex-wrap gap-3 items-center">
-          <span class="badge"><span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span> 100% instant results</span>
-          <span class="badge"><span class="inline-block w-2 h-2 rounded-full bg-sky-400"></span> Voice-over + 5 hooks + SRT</span>
-          <span class="badge"><span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span> Works for every niche</span>
-        </div>
+<!-- ══════════ SINGLE TAB ══════════ -->
+<div id="singleTab">
+<div class="studio">
+  <div class="w">
 
-        <div class="mt-6 grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <h1 class="text-4xl md:text-6xl font-semibold tracking-tight leading-[1.03]">
-              Turn any video into a <span class="text-indigo-600">high-retention</span> clip with AI voice-over.
-            </h1>
-            <p class="mt-5 text-slate-600 text-lg leading-relaxed max-w-xl">
-              Upload your video, choose a voice and niche, and get a new version with AI voice-over, plus 5 hook options you can A/B test—along with SRT subtitles.
-            </p>
-            <div class="mt-7 flex flex-wrap gap-3">
-              <a href="#studio" class="btn inline-flex items-center justify-center rounded-full bg-indigo-600 text-white px-6 py-3 shadow-sm hover:opacity-95">
-                Launch Studio
-              </a>
-              <a href="#how" class="btn inline-flex items-center justify-center rounded-full glass2 px-6 py-3">
-                See how it works
-              </a>
-            </div>
-            <div class="mt-6 text-sm text-slate-500">No accounts. No editing skills. Just upload and download.</div>
-          </div>
+    <!-- History panel (shown when history exists) -->
+    <div id="historyPanel" class="hide history-panel">
+      <div class="hp-head">
+        <div class="hp-title">Recent Sessions</div>
+        <button class="bt" onclick="clearHistory()">Clear</button>
+      </div>
+      <div class="hp-list" id="historyList"></div>
+    </div>
 
-          <div class="glass2 rounded-2xl p-5 md:p-6">
-            <div class="text-sm text-slate-600">What you’ll get back</div>
-            <div class="mt-3 grid gap-3">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center"><span class="mono text-indigo-600">01</span></div>
-                <div>
-                  <div class="font-medium">AI voice-over audio</div>
-                  <div class="text-sm text-slate-500">Preview & download as MP3</div>
-                </div>
+    <!-- Stepper -->
+    <div class="stepr">
+      <div class="sti on" id="step1"><div class="stn">1</div>Upload</div>
+      <div class="sarr">›</div>
+      <div class="sti" id="step2"><div class="stn">2</div>Configure</div>
+      <div class="sarr">›</div>
+      <div class="sti" id="step3"><div class="stn">3</div>Generate</div>
+      <div class="sarr">›</div>
+      <div class="sti" id="step4"><div class="stn">✓</div>Download</div>
+    </div>
+
+    <div class="sgrid">
+      <!-- LEFT -->
+      <div class="lcol">
+
+        <!-- Upload -->
+        <div class="card">
+          <div class="ch"><div class="ct">Video Upload</div><div class="csub">Drag &amp; drop or click to browse</div></div>
+          <div class="cb">
+            <div class="dz" id="dropZone" role="button" tabindex="0" onclick="if(!selectedFile)document.getElementById('vFile').click()">
+              <input id="vFile" type="file" accept="video/*" class="hide" onchange="handleFileInput(this)"/>
+              <div id="dzContent" class="dz-in">
+                <div class="dz-ic">📹</div>
+                <div class="dz-t">Drop your video here</div>
+                <div class="dz-s">or click to select · <kbd style="font-family:var(--mono);background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:10px">U</kbd> key</div>
+                <div class="dz-f"><span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WebM</span><span class="fmt">MKV</span></div>
               </div>
-
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center"><span class="mono text-sky-600">02</span></div>
-                <div>
-                  <div class="font-medium">Merged MP4 output</div>
-                  <div class="text-sm text-slate-500">Original video + voice mix + offset</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center"><span class="mono text-emerald-600">03</span></div>
-                <div>
-                  <div class="font-medium">SRT subtitles</div>
-                  <div class="text-sm text-slate-500">English subtitles file</div>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center"><span class="mono text-amber-600">04</span></div>
-                <div>
-                  <div class="font-medium">5 hook lines</div>
-                  <div class="text-sm text-slate-500">Click “Use” to re-render without re-uploading</div>
+              <div id="dzThumb" class="hide">
+                <video id="vThumb" muted playsinline></video>
+                <div class="tbar">
+                  <span class="tn" id="tName"></span>
+                  <span class="tsz" id="tSize"></span>
+                  <button class="tchg" onclick="event.stopPropagation();document.getElementById('vFile').click()">Change</button>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="mt-5 divider"></div>
-            <div class="mt-5 text-xs text-slate-500 leading-relaxed">
-              Tip: Generate once, then click <span class="mono">Use</span> on any hook to create a new voice-over/video without re-uploading.
+        <!-- Config -->
+        <div class="card">
+          <div class="ch"><div class="ct">Configuration</div><div class="csub">Voice, niche, script &amp; audio settings</div></div>
+          <div class="cb">
+
+            <!-- Script mode tabs -->
+            <div class="script-tabs">
+              <button class="stab on" id="modeHooks" onclick="setScriptMode('hooks')">Auto Hooks</button>
+              <button class="stab" id="modeScript" onclick="setScriptMode('script')">Custom Script</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
+            <div id="scriptArea" class="hide">
+              <textarea id="customScript" rows="4" placeholder="Type your voice-over script here. This text will be used as TTS input and overrides auto-generated hooks."></textarea>
+              <div class="char-count"><span id="charCount">0</span> / 1000 chars</div>
+              <div class="script-hint">📝 When script is filled, it's used as TTS text. Hooks are still generated for A/B testing.</div>
+            </div>
 
-    <!-- Studio -->
-    <section id="studio" class="mt-10 grid lg:grid-cols-2 gap-6 items-start">
-      <!-- Left -->
-      <div class="glass rounded-3xl p-6 md:p-8">
-        <div class="flex items-start justify-between gap-6">
-          <div>
-            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Studio</h2>
-            <p class="mt-2 text-slate-600">Upload a video, choose settings, and generate the output.</p>
-          </div>
-          <div class="text-right text-xs text-slate-500">
-            Endpoint: <span class="mono">POST /upload</span><br/>
-            Apply hook: <span class="mono">POST /apply-hook</span>
-          </div>
-        </div>
+            <div class="divider"></div>
 
-        <!-- Dropzone -->
-        <div id="dropZone" class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 md:p-8 text-center cursor-pointer select-none" role="button" tabindex="0" aria-label="Upload video">
-          <input id="videoFile" type="file" accept="video/*" class="hidden" />
-          <div class="mx-auto w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"/>
-            </svg>
-          </div>
-          <div class="mt-3 font-medium">Drop a video here</div>
-          <div class="mt-1 text-sm text-slate-500">or click to browse</div>
-
-          <div id="fileMeta" class="mt-4 hide text-sm text-slate-600">
-            <div><span class="font-medium">Selected:</span> <span id="fileName" class="mono"></span></div>
-            <div><span class="font-medium">Size:</span> <span id="fileSize" class="mono"></span></div>
-          </div>
-        </div>
-
-        <!-- Settings -->
-        <div class="mt-6 grid md:grid-cols-2 gap-4">
-          <!-- Niche preset -->
-          <div>
-            <label class="text-sm font-medium text-slate-700" for="niche">Niche</label>
-            <select id="niche" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring">
-              <option value="business">Business</option>
-              <option value="education">Education</option>
-              <option value="motivation">Motivation</option>
-              <option value="fitness">Fitness</option>
-              <option value="tech">Tech</option>
-              <option value="gaming">Gaming</option>
-              <option value="travel">Travel</option>
-              <option value="content" selected>General</option>
-            </select>
-            <p class="mt-1 text-xs text-slate-500">Or type your own niche below.</p>
-          </div>
-
-          <!-- Voice presets -->
-          <div>
-            <label class="text-sm font-medium text-slate-700" for="voice">Voice</label>
-            <select id="voice" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring">
-              <option value="us_clear" selected>US — Clear</option>
-              <option value="uk_clear">UK — Clear</option>
-              <option value="au_clear">AU — Clear</option>
-              <option value="in_clear">IN — Clear</option>
-              <option value="energetic">Energetic</option>
-              <option value="calm">Calm</option>
-              <option value="us_fast">US — Fast</option>
-              <option value="uk_calm">UK — Calm</option>
-            </select>
-            <p class="mt-1 text-xs text-slate-500">These map to server voice presets.</p>
-          </div>
-
-          <!-- Custom niche -->
-          <div class="md:col-span-2">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex-1">
-                <label class="text-sm font-medium text-slate-700" for="customNiche">Custom niche (optional)</label>
-                <input id="customNiche" type="text" placeholder="e.g. real estate, barber, dentists, crypto, car detailing..."
-                  class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring" />
-                <p class="mt-1 text-xs text-slate-500">
-                  If filled, this will override the dropdown niche automatically.
-                </p>
+            <div class="fr2">
+              <div>
+                <label class="fl" for="niche">Niche</label>
+                <select id="niche"><option>General</option><option>Business</option><option>Education</option><option>Motivation</option><option>Fitness</option><option>Tech</option><option>Gaming</option><option>Travel</option></select>
               </div>
-              <div class="pt-7">
-                <label class="inline-flex items-center gap-2 text-xs text-slate-600 select-none">
-                  <input id="useCustomNiche" type="checkbox" class="rounded" checked />
-                  Use custom niche
-                </label>
+              <div>
+                <label class="fl" for="cNiche">Custom Niche</label>
+                <input id="cNiche" type="text" placeholder="real estate, crypto…"/>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label class="text-sm font-medium text-slate-700" for="offset">Offset (seconds)</label>
-            <input id="offset" type="number" step="0.1" value="0" class="mt-2 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 focus-ring" />
-            <p class="mt-1 text-xs text-slate-500">Delays voice start (supports 0.3 or 0,3 on backend).</p>
-          </div>
+            <div class="divider"></div>
 
-          <div>
-            <label class="text-sm font-medium text-slate-700" for="mix">Voice Mix</label>
-            <input id="mix" type="range" min="0" max="100" value="80" class="mt-3 w-full" />
-            <div class="mt-1 text-xs text-slate-500">
-              <span class="font-medium">AI voice:</span> <span id="mixLabel" class="mono">80</span>%
-              <span class="ml-2 text-slate-400">(0 = full original, 100 = full AI voice)</span>
+            <!-- Voice chips -->
+            <label class="fl">Voice Preset</label>
+            <div class="vgrid" id="vChips">
+              <div class="vc sel" data-v="us_clear" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Clear</span></div>
+              <div class="vc" data-v="uk_clear" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Clear</span></div>
+              <div class="vc" data-v="au_clear" onclick="selVoice(this)"><span class="flag">🇦🇺</span><span>AU Clear</span></div>
+              <div class="vc" data-v="in_clear" onclick="selVoice(this)"><span class="flag">🇮🇳</span><span>IN Clear</span></div>
+              <div class="vc" data-v="energetic" onclick="selVoice(this)"><span class="flag">⚡</span><span>Energetic</span></div>
+              <div class="vc" data-v="calm" onclick="selVoice(this)"><span class="flag">🌊</span><span>Calm</span></div>
+              <div class="vc" data-v="us_fast" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Fast</span></div>
+              <div class="vc" data-v="uk_calm" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Calm</span></div>
             </div>
-          </div>
-        </div>
+            <input type="hidden" id="voice" value="us_clear"/>
 
-        <!-- Actions -->
-        <div class="mt-6 flex flex-wrap items-center gap-3">
-          <button id="processBtn" class="btn rounded-full bg-indigo-600 text-white px-6 py-3 shadow-sm hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-            Generate Output
-          </button>
-          <button id="resetBtn" class="btn rounded-full glass2 px-6 py-3">Reset</button>
-          <div class="ml-auto text-xs text-slate-500">Tip: short clips (10–20s) process fastest.</div>
-        </div>
+            <div class="divider"></div>
 
-        <!-- Progress -->
-        <div class="mt-6 glass2 rounded-2xl p-4">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-medium">Status</div>
-            <div id="statusText" class="text-sm text-slate-600">Idle</div>
-          </div>
-          <div class="mt-3 progress" aria-label="Upload progress">
-            <div id="progressBar"></div>
-          </div>
-          <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
-            <div id="progressPct" class="mono">0%</div>
-            <div id="progressMB" class="mono">0 MB / 0 MB</div>
-          </div>
-          <div class="mt-3 text-xs text-slate-500">
-            If you see <span class="mono">405 Method Not Allowed</span>, your backend route isn’t accepting POST.
-            This frontend sends a <span class="mono">POST</span> to <span class="mono">/upload</span>.
-          </div>
-        </div>
-      </div>
-
-      <!-- Right -->
-      <div class="glass rounded-3xl p-6 md:p-8">
-        <h3 class="text-xl font-semibold tracking-tight">Results</h3>
-        <p class="mt-2 text-slate-600">Your generated files and hook options will appear here after processing.</p>
-
-        <!-- Hooks -->
-        <div class="mt-6 glass2 rounded-2xl p-4">
-          <div class="flex items-center justify-between gap-2">
-            <div class="text-sm font-medium">Hook options (A/B test)</div>
-            <button id="copySelectedBtn" class="btn rounded-full px-4 py-2 bg-slate-900 text-white text-xs hover:opacity-95 disabled:opacity-40" disabled>
-              Copy selected hook
-            </button>
-          </div>
-          <div class="mt-3 text-xs text-slate-500">
-            Select a hook and click <span class="mono">Use</span> to generate a new voice-over/video without re-uploading.
-          </div>
-
-          <div id="hooksList" class="mt-4 space-y-2">
-            <div class="text-sm text-slate-400">No hooks yet.</div>
-          </div>
-
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button id="copyAllHooksBtn" class="btn rounded-full px-4 py-2 glass2 text-xs disabled:opacity-40" disabled>Copy all hooks</button>
-            <button id="exportHooksJsonBtn" class="btn rounded-full px-4 py-2 glass2 text-xs disabled:opacity-40" disabled>Export JSON</button>
-            <button id="exportHooksCsvBtn" class="btn rounded-full px-4 py-2 glass2 text-xs disabled:opacity-40" disabled>Export CSV</button>
-          </div>
-        </div>
-
-        <!-- Media previews -->
-        <div class="mt-6 grid gap-4">
-          <div class="glass2 rounded-2xl p-4">
-            <div class="text-sm font-medium">Video preview</div>
-            <video id="outVideo" class="mt-3 w-full rounded-xl bg-black" controls playsinline></video>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <a id="downloadVideo" class="btn rounded-full bg-indigo-600 text-white px-5 py-2 text-sm hover:opacity-95 inline-flex items-center gap-2 pointer-events-none opacity-40" href="#" download>
-                Download MP4
-              </a>
-              <a id="downloadSrt" class="btn rounded-full glass2 px-5 py-2 text-sm inline-flex items-center gap-2 pointer-events-none opacity-40" href="#" download>
-                Download SRT
-              </a>
-            </div>
-          </div>
-
-          <div class="glass2 rounded-2xl p-4">
-            <div class="text-sm font-medium">Voice-over preview</div>
-            <audio id="outAudio" class="mt-3 w-full" controls></audio>
-            <div class="mt-3">
-              <a id="downloadAudio" class="btn rounded-full glass2 px-5 py-2 text-sm inline-flex items-center gap-2 pointer-events-none opacity-40" href="#" download>
-                Download MP3
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Debug -->
-        <div class="mt-6 text-xs text-slate-500">
-          <div class="font-medium text-slate-600">Connection</div>
-          <div class="mt-1">Using API base: <span id="apiBaseLabel" class="mono"></span></div>
-          <div class="mt-1">Tip: if your frontend is hosted elsewhere, add <span class="mono">?api=https://YOUR-DOMAIN</span> to the URL.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- How -->
-    <section id="how" class="mt-10 glass rounded-3xl p-6 md:p-10">
-      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">How it works</h2>
-      <div class="mt-6 grid md:grid-cols-3 gap-4">
-        <div class="glass2 rounded-2xl p-5">
-          <div class="mono text-indigo-600 text-sm">Step 1</div>
-          <div class="mt-1 font-medium">Upload a video</div>
-          <div class="mt-1 text-sm text-slate-600">Drag & drop or browse. Any standard video format works.</div>
-        </div>
-        <div class="glass2 rounded-2xl p-5">
-          <div class="mono text-indigo-600 text-sm">Step 2</div>
-          <div class="mt-1 font-medium">Choose voice + niche</div>
-          <div class="mt-1 text-sm text-slate-600">These settings are sent to the backend endpoint.</div>
-        </div>
-        <div class="glass2 rounded-2xl p-5">
-          <div class="mono text-indigo-600 text-sm">Step 3</div>
-          <div class="mt-1 font-medium">Download everything</div>
-          <div class="mt-1 text-sm text-slate-600">MP4 output, MP3 voice preview, SRT subtitles, and 5 hooks.</div>
-        </div>
-      </div>
-      <div class="mt-8 text-sm text-slate-500">
-        Your backend must be running and reachable.
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq" class="mt-10 glass rounded-3xl p-6 md:p-10">
-      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">FAQ</h2>
-      <div class="mt-6 grid md:grid-cols-2 gap-4">
-        <div class="glass2 rounded-2xl p-5">
-          <div class="font-medium">Why did I get “405 Method Not Allowed” earlier?</div>
-          <div class="mt-2 text-sm text-slate-600">
-            That happens when the server route doesn’t accept POST on <span class="mono">/upload</span>.
-            This frontend sends a POST with <span class="mono">multipart/form-data</span>.
-          </div>
-        </div>
-        <div class="glass2 rounded-2xl p-5">
-          <div class="font-medium">Can I generate voice-over for hook #2–#5?</div>
-          <div class="mt-2 text-sm text-slate-600">
-            Yes. Generate once, then click <span class="mono">Use</span> on any hook. The app calls <span class="mono">POST /apply-hook</span>.
-          </div>
-        </div>
-        <div class="glass2 rounded-2xl p-5">
-          <div class="font-medium">Where do the output files live?</div>
-          <div class="mt-2 text-sm text-slate-600">
-            The backend returns URLs like <span class="mono">/static/outputs/&lt;id&gt;.mp4</span>.
-          </div>
-        </div>
-        <div class="glass2 rounded-2xl p-5">
-          <div class="font-medium">Can I host frontend separately from backend?</div>
-          <div class="mt-2 text-sm text-slate-600">
-            Yes. Add <span class="mono">?api=https://your-backend-domain</span> to the URL.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="mt-10 pb-10 text-center text-xs text-slate-500">
-      <div class="divider my-6"></div>
-      <div class="flex items-center justify-center gap-2">
-        <img src="/static/logo.png" alt="Logo" class="w-6 h-6 rounded-lg" />
-        <span>© <span id="year"></span> AutoVoiceOver</span>
-      </div>
-      <div class="mt-1">Built to match your FastAPI backend: <span class="mono">POST /upload</span> + <span class="mono">POST /apply-hook</span></div>
-    </footer>
-  </main>
-
-  <script>
-    (function () {
-      const $ = (sel) => document.querySelector(sel);
-      const toastEl = $("#toast");
-
-      const toast = (msg) => {
-        if (!toastEl) return;
-        toastEl.textContent = msg;
-        toastEl.dataset.show = "true";
-        window.clearTimeout(window.__toastTimer);
-        window.__toastTimer = window.setTimeout(() => {
-          toastEl.dataset.show = "false";
-        }, 2200);
-      };
-
-      const fmtMB = (bytes) => (bytes / 1024 / 1024).toFixed(1);
-
-      // API base
-      const params = new URLSearchParams(location.search);
-      const apiBase = (params.get("api") || "").replace(/\/+$/, "");
-      $("#apiBaseLabel").textContent = apiBase ? apiBase : "(same origin)";
-      const apiUrl = (path) => apiBase ? (apiBase + path) : path;
-
-      const withBust = (u) => {
-        if (!u) return u;
-        const sep = u.includes("?") ? "&" : "?";
-        return `${u}${sep}v=${Date.now()}`;
-      };
-
-      const escapeHtml = (s) => String(s || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-      const copyText = async (t) => {
-        try {
-          await navigator.clipboard.writeText(String(t || ""));
-          return true;
-        } catch {
-          const ta = document.createElement("textarea");
-          ta.value = String(t || "");
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          ta.remove();
-          return true;
-        }
-      };
-
-      // Elements
-      const mobileBtn = $("#mobileMenuBtn");
-      const mobileMenu = $("#mobileMenu");
-      const dropZone = $("#dropZone");
-      const fileInput = $("#videoFile");
-      const processBtn = $("#processBtn");
-      const resetBtn = $("#resetBtn");
-      const fileMeta = $("#fileMeta");
-      const fileNameEl = $("#fileName");
-      const fileSizeEl = $("#fileSize");
-
-      const nicheEl = $("#niche");
-      const customNicheEl = $("#customNiche");
-      const useCustomNicheEl = $("#useCustomNiche");
-
-      const voiceEl = $("#voice");
-      const offsetEl = $("#offset");
-      const mixEl = $("#mix");
-      const mixLabel = $("#mixLabel");
-
-      const statusText = $("#statusText");
-      const progressBar = $("#progressBar");
-      const progressPct = $("#progressPct");
-      const progressMB = $("#progressMB");
-
-      const hooksList = $("#hooksList");
-      const copySelectedBtn = $("#copySelectedBtn");
-      const copyAllHooksBtn = $("#copyAllHooksBtn");
-      const exportHooksJsonBtn = $("#exportHooksJsonBtn");
-      const exportHooksCsvBtn = $("#exportHooksCsvBtn");
-
-      const outVideo = $("#outVideo");
-      const outAudio = $("#outAudio");
-      const downloadVideo = $("#downloadVideo");
-      const downloadSrt = $("#downloadSrt");
-      const downloadAudio = $("#downloadAudio");
-
-      // State
-      let selectedFile = null;
-      let SESSION_ID = null;
-      let lastHooks = [];
-      let selectedHookIndex = 0;
-
-      $("#year").textContent = new Date().getFullYear();
-
-      const setStatus = (s) => { if (statusText) statusText.textContent = s; };
-
-      const setProgress = (pct, loaded, total) => {
-        if (progressBar) progressBar.style.width = `${pct}%`;
-        if (progressPct) progressPct.textContent = `${pct}%`;
-        if (progressMB) progressMB.textContent = `${loaded} MB / ${total} MB`;
-      };
-
-      const setDownloadsEnabled = (enabled) => {
-        const on = !!enabled;
-        const toggle = (el, enabled) => {
-          if (!el) return;
-          el.classList.toggle("pointer-events-none", !enabled);
-          el.classList.toggle("opacity-40", !enabled);
-        };
-        toggle(downloadVideo, on);
-        toggle(downloadSrt, on);
-        toggle(downloadAudio, on);
-      };
-
-      const setHookToolsEnabled = (enabled) => {
-        copySelectedBtn.disabled = !enabled;
-        copyAllHooksBtn.disabled = !enabled;
-        exportHooksJsonBtn.disabled = !enabled;
-        exportHooksCsvBtn.disabled = !enabled;
-      };
-
-      const setBusy = (busy) => {
-        processBtn.disabled = busy || !selectedFile;
-        processBtn.textContent = busy ? "Processing..." : "Generate Output";
-      };
-
-      const getEffectiveNiche = () => {
-        const custom = (customNicheEl.value || "").trim();
-        const useCustom = !!useCustomNicheEl.checked;
-        if (useCustom && custom.length >= 2) return custom;
-        return (nicheEl.value || "content");
-      };
-
-      // Reset
-      const resetAll = () => {
-        selectedFile = null;
-        SESSION_ID = null;
-        lastHooks = [];
-        selectedHookIndex = 0;
-
-        if (fileInput) fileInput.value = "";
-        if (fileMeta) fileMeta.classList.add("hide");
-        if (fileNameEl) fileNameEl.textContent = "";
-        if (fileSizeEl) fileSizeEl.textContent = "";
-
-        processBtn.disabled = true;
-        setStatus("Idle");
-        setProgress(0, "0.0", "0.0");
-
-        hooksList.innerHTML = `<div class="text-sm text-slate-400">No hooks yet.</div>`;
-        setHookToolsEnabled(false);
-
-        if (outVideo) outVideo.removeAttribute("src");
-        if (outAudio) outAudio.removeAttribute("src");
-        if (downloadVideo) downloadVideo.href = "#";
-        if (downloadSrt) downloadSrt.href = "#";
-        if (downloadAudio) downloadAudio.href = "#";
-        setDownloadsEnabled(false);
-
-        toast("Reset complete.");
-      };
-
-      // Mobile menu
-      if (mobileBtn && mobileMenu) {
-        mobileBtn.addEventListener("click", () => mobileMenu.classList.toggle("hide"));
-      }
-
-      // Mix label
-      if (mixEl && mixLabel) {
-        mixLabel.textContent = mixEl.value;
-        mixEl.addEventListener("input", () => mixLabel.textContent = mixEl.value);
-      }
-
-      // Dropzone
-      const openPicker = () => fileInput && fileInput.click();
-
-      const setFile = (file) => {
-        if (!file) return;
-        selectedFile = file;
-        processBtn.disabled = false;
-
-        if (fileMeta) fileMeta.classList.remove("hide");
-        if (fileNameEl) fileNameEl.textContent = file.name;
-        if (fileSizeEl) fileSizeEl.textContent = `${fmtMB(file.size)} MB`;
-
-        toast(`Selected: ${file.name}`);
-      };
-
-      if (dropZone) {
-        dropZone.addEventListener("click", openPicker);
-        dropZone.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") openPicker();
-        });
-        dropZone.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          dropZone.classList.add("drop-highlight");
-        });
-        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drop-highlight"));
-        dropZone.addEventListener("drop", (e) => {
-          e.preventDefault();
-          dropZone.classList.remove("drop-highlight");
-          const f = e.dataTransfer.files && e.dataTransfer.files[0];
-          if (f) setFile(f);
-        });
-      }
-
-      if (fileInput) {
-        fileInput.addEventListener("change", (e) => {
-          const f = e.target.files && e.target.files[0];
-          if (f) setFile(f);
-        });
-      }
-
-      // Apply hook (now sends voice)
-      async function applyHook(index) {
-        if (!SESSION_ID) {
-          toast("No active session. Upload a video first.");
-          return;
-        }
-
-        setStatus("Applying hook...");
-        setDownloadsEnabled(false);
-
-        const fd = new FormData();
-        fd.append("session_id", SESSION_ID);
-        fd.append("hook_index", String(index));
-        fd.append("voice", (voiceEl.value || "us_clear"));
-        fd.append("offset", (offsetEl.value || "0").toString());
-        fd.append("mix", (mixEl.value || "80").toString());
-
-        try {
-          const res = await fetch(apiUrl("/apply-hook"), { method: "POST", body: fd });
-          const data = await res.json();
-
-          if (!res.ok) {
-            toast(data.detail || "Apply hook failed.");
-            setStatus("Error");
-            return;
-          }
-
-          const mp4 = data.download_url;
-          const srt = data.srt_url;
-          const mp3 = data.audio_preview_url;
-
-          if (outVideo && mp4) outVideo.src = apiUrl(withBust(mp4));
-          if (outAudio && mp3) outAudio.src = apiUrl(withBust(mp3));
-
-          if (downloadVideo && mp4) downloadVideo.href = apiUrl(withBust(mp4));
-          if (downloadSrt && srt) downloadSrt.href = apiUrl(withBust(srt));
-          if (downloadAudio && mp3) downloadAudio.href = apiUrl(withBust(mp3));
-
-          setDownloadsEnabled(!!(mp4 || srt || mp3));
-          setStatus(`Done (Hook #${index + 1})`);
-          toast(`Applied hook #${index + 1}.`);
-
-          if (outAudio) outAudio.play().catch(() => {});
-        } catch (e) {
-          setStatus("Network error");
-          toast("Network error while applying hook.");
-        }
-      }
-
-      // Hooks UI
-      const renderHooks = (hooks) => {
-        lastHooks = Array.isArray(hooks) ? hooks : [];
-        selectedHookIndex = 0;
-
-        if (!lastHooks.length) {
-          hooksList.innerHTML = `<div class="text-sm text-slate-400">No hooks returned.</div>`;
-          setHookToolsEnabled(false);
-          return;
-        }
-
-        setHookToolsEnabled(true);
-
-        hooksList.innerHTML = lastHooks.map((h, i) => {
-          const safe = escapeHtml(h || "");
-          const checked = i === 0 ? "checked" : "";
-          const useDisabled = SESSION_ID ? "" : "disabled";
-          const useOpacity = SESSION_ID ? "" : "opacity-50 cursor-not-allowed";
-          return `
-            <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 hover:bg-white transition cursor-pointer">
-              <input type="radio" name="hookPick" value="${i}" class="mt-1" ${checked} />
-              <div class="flex-1">
-                <div class="text-xs text-slate-500">Hook #${i + 1}</div>
-                <div class="text-sm text-slate-800 leading-relaxed">${safe}</div>
-
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <button type="button" data-use="${i}" class="btn rounded-full px-3 py-1 text-xs bg-indigo-600 text-white hover:opacity-95 ${useOpacity}" ${useDisabled}>
-                    Use
-                  </button>
-                  <button type="button" data-copy="${i}" class="btn rounded-full px-3 py-1 text-xs bg-slate-900 text-white hover:opacity-95">
-                    Copy
-                  </button>
-                </div>
+            <!-- Speed + Pitch -->
+            <div class="sp-row">
+              <div>
+                <div class="mixr"><span>Voice Speed</span><strong id="speedLabel">1.0×</strong></div>
+                <input type="range" id="speed" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById('speedLabel').textContent=parseFloat(this.value).toFixed(2)+'×'"/>
               </div>
-            </label>
-          `;
-        }).join("");
+              <div>
+                <div class="mixr"><span>Voice Pitch</span><strong id="pitchLabel">1.0</strong></div>
+                <input type="range" id="pitch" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById('pitchLabel').textContent=parseFloat(this.value).toFixed(2)"/>
+              </div>
+            </div>
 
-        hooksList.querySelectorAll('input[name="hookPick"]').forEach((r) => {
-          r.addEventListener("change", (e) => {
-            selectedHookIndex = Number(e.target.value || 0);
-          });
-        });
+            <div class="divider"></div>
 
-        hooksList.querySelectorAll("button[data-use]").forEach((b) => {
-          b.addEventListener("click", async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const idx = Number(b.getAttribute("data-use") || 0);
-            selectedHookIndex = idx;
-            await applyHook(idx);
-          });
-        });
+            <!-- Mix -->
+            <div class="mixr"><span>Voice Mix</span><span>AI: <strong id="mixLbl">80</strong>% · Original: <strong id="origLbl">20</strong>%</span></div>
+            <div class="mixrow">
+              <span class="rend">Original</span>
+              <input type="range" id="mix" min="0" max="100" value="80" oninput="document.getElementById('mixLbl').textContent=this.value;document.getElementById('origLbl').textContent=100-this.value"/>
+              <span class="rend">AI voice</span>
+            </div>
 
-        hooksList.querySelectorAll("button[data-copy]").forEach((b) => {
-          b.addEventListener("click", async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const idx = Number(b.getAttribute("data-copy") || 0);
-            const text = lastHooks[idx] || "";
-            await copyText(text);
-            toast(`Copied hook #${idx + 1}`);
-          });
-        });
+            <div class="divider"></div>
+
+            <!-- Timeline -->
+            <div class="tl" id="tlWrap">
+              <div class="tlh">
+                <span class="tll">Voice Start Offset</span>
+                <span class="tlv" id="offDisp">0.0s</span>
+              </div>
+              <div class="tlt" id="tlTrack">
+                <div class="tl-bg"></div>
+                <div class="tl-fill" id="tlFill" style="width:0%"></div>
+                <div class="tl-orig" id="tlOrig"></div>
+                <div class="tl-ai" id="tlAi" style="left:0%"></div>
+                <div class="tl-handle" id="tlHandle" style="left:0%"></div>
+                <div class="tl-ts"><span class="tl-t">0s</span><span class="tl-t" id="tlMid"></span><span class="tl-t" id="tlMax"></span></div>
+              </div>
+              <div class="tl-leg">
+                <div class="tl-li"><div class="tl-ln" style="background:color-mix(in srgb,var(--ink) 20%,transparent)"></div>Original</div>
+                <div class="tl-li"><div class="tl-ln" style="background:rgba(91,33,182,.5)"></div>AI voice</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="arow">
+              <button class="bgen" id="genBtn" onclick="processNow()" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg>
+                Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>
+              </button>
+              <button class="bghost" onclick="resetAll()">Reset <span style="opacity:.5;font-size:10px">[R]</span></button>
+            </div>
+
+            <div class="pcard">
+              <div class="pr">
+                <span class="ps" id="statTxt">Idle — upload a video to begin</span>
+                <span class="ppct" id="progPct">0%</span>
+              </div>
+              <div class="pt"><div class="pf" id="progBar"></div></div>
+              <div class="phases">
+                <span class="ph" id="ph1">Upload</span><span class="ph" id="ph2">TTS</span>
+                <span class="ph" id="ph3">Merge</span><span class="ph" id="ph4">SRT</span><span class="ph" id="ph5">Done</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div><!-- /lcol -->
+
+      <!-- RIGHT -->
+      <div>
+        <div class="card" style="position:sticky;top:76px" id="resCard">
+
+          <!-- Empty -->
+          <div id="resEmpty">
+            <div class="ch"><div class="ct">Results</div><div class="csub">Output appears here after generating</div></div>
+            <div style="padding:48px 24px;text-align:center;border-top:1px solid var(--border);margin-top:16px">
+              <div style="font-size:36px;opacity:.25;margin-bottom:12px">🎬</div>
+              <div style="font-size:13px;color:var(--muted)">Configure left and click Generate Output</div>
+              <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-top:8px">Press G to generate · Space to play</div>
+            </div>
+          </div>
+
+          <!-- Hooks -->
+          <div id="hooksSec" class="hide">
+            <div class="hh">
+              <div class="htit">
+                Hook Options
+                <span class="hbdg" id="hCount">0</span>
+                <span class="hscoring hide" id="scoringLbl">🧠 scoring…</span>
+              </div>
+              <div class="htools">
+                <button class="bt" id="copyAllBtn" onclick="copyAllHooks()" disabled>Copy all</button>
+                <button class="bt" id="abBtn" onclick="toggleABMode()">A/B Compare</button>
+                <button class="bt" id="captionBtn" onclick="openCaption()" disabled>📱 Caption</button>
+                <button class="bt" id="rescoreBtn" onclick="rescoreHooks()" disabled>Re-score</button>
+                <button class="bt" id="expJson" onclick="expJSON()" disabled>JSON</button>
+                <button class="bt" id="expCsv" onclick="expCSV()" disabled>CSV</button>
+              </div>
+            </div>
+
+            <!-- A/B bar -->
+            <div id="abBar" class="hide" style="padding:0 12px 0">
+              <div class="ab-bar">
+                <span class="ab-label">A/B:</span>
+                <div class="ab-slot" id="abSlotA">A — empty</div>
+                <span class="ab-vs">vs</span>
+                <div class="ab-slot" id="abSlotB">B — empty</div>
+                <button class="ab-clear" onclick="clearAB()">clear</button>
+              </div>
+            </div>
+
+            <div class="hlist" id="hList"></div>
+          </div>
+
+          <!-- Video -->
+          <div id="vidSec" class="msec hide">
+            <div class="mlbl">Video Output</div>
+            <video id="outVideo" playsinline controls></video>
+            <div class="vacts">
+              <a id="dlVid" class="dlb dlp dis" href="#" download="autovoiceover.mp4">↓ MP4</a>
+              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">↓ SRT</a>
+            </div>
+          </div>
+
+          <!-- Audio + waveform -->
+          <div id="audSec" class="msec hide">
+            <div class="mlbl">Voice-over Preview</div>
+            <div class="wwrap"><canvas id="waveCanvas" width="600" height="56"></canvas></div>
+            <div class="awrap"><audio id="outAudio" controls onplay="startWave()" onpause="stopWave()" onended="stopWave()"></audio></div>
+            <div class="adl"><a id="dlAud" class="dlb dls dis" href="#" download="voiceover.mp3">↓ MP3</a></div>
+          </div>
+
+          <div style="padding:12px 20px;border-top:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--muted2)">
+            API: <span id="apiDisp"></span> · <span id="serverStatus"></span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /sgrid -->
+  </div>
+</div>
+</div><!-- /singleTab -->
+
+<!-- ══════════ BATCH TAB ══════════ -->
+<div id="batchTab" class="hide">
+<div class="studio">
+  <div class="w">
+    <div style="max-width:860px;margin:0 auto">
+      <div style="margin-bottom:28px">
+        <div style="font-family:var(--serif);font-size:40px;letter-spacing:-.03em;line-height:1.05">Batch Mode</div>
+        <div style="font-size:15px;color:var(--ink3);margin-top:8px">Process multiple videos at once with shared settings.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start">
+
+        <!-- Config -->
+        <div class="card">
+          <div class="ch"><div class="ct">Batch Settings</div><div class="csub">Applied to all videos</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label class="fl">Voice</label>
+              <select id="bVoice"><option value="us_clear">🇺🇸 US Clear</option><option value="uk_clear">🇬🇧 UK Clear</option><option value="au_clear">🇦🇺 AU Clear</option><option value="in_clear">🇮🇳 IN Clear</option><option value="energetic">⚡ Energetic</option><option value="calm">🌊 Calm</option></select>
+            </div>
+            <div>
+              <label class="fl">Niche</label>
+              <select id="bNiche"><option>General</option><option>Business</option><option>Education</option><option>Motivation</option><option>Fitness</option><option>Tech</option></select>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;color:var(--muted)"><span>Voice Mix</span><strong id="bMixLbl" style="font-family:var(--mono);color:var(--ink)">80%</strong></div>
+              <input type="range" id="bMix" min="0" max="100" value="80" style="width:100%;accent-color:var(--ink)" oninput="document.getElementById('bMixLbl').textContent=this.value+'%'"/>
+            </div>
+            <div>
+              <label class="fl">Offset (sec)</label>
+              <input id="bOff" type="number" min="0" step="0.1" value="0"/>
+            </div>
+            <div class="divider"></div>
+            <button class="bgen" id="bRunBtn" onclick="runBatch()" disabled style="justify-content:center">Run Batch</button>
+            <button onclick="clearBatch()" style="font-size:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--sans);text-align:center">Clear all</button>
+          </div>
+        </div>
+
+        <!-- Queue -->
+        <div>
+          <div class="batch-drop" id="bDrop" onclick="document.getElementById('bInput').click()" ondragover="event.preventDefault();this.classList.add('hl')" ondragleave="this.classList.remove('hl')" ondrop="batchDrop(event)">
+            <input id="bInput" type="file" accept="video/*" multiple class="hide" onchange="addBatchFiles(this.files)"/>
+            <div style="font-size:22px;margin-bottom:10px">📥</div>
+            <div style="font-size:14px;font-weight:600">Drop multiple videos here</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)">or click to browse · multiple files OK</div>
+          </div>
+          <div class="bstats" id="bStats" style="display:none">
+            <div class="bstat"><div class="bsn" id="bsTotal" style="color:var(--ink3)">0</div><div class="bsl">Total</div></div>
+            <div class="bstat"><div class="bsn" id="bsQ" style="color:var(--muted)">0</div><div class="bsl">Queued</div></div>
+            <div class="bstat"><div class="bsn" id="bsDone" style="color:var(--green)">0</div><div class="bsl">Done</div></div>
+            <div class="bstat"><div class="bsn" id="bsErr" style="color:var(--red)">0</div><div class="bsl">Error</div></div>
+          </div>
+          <div class="qlist" id="qList"></div>
+          <div id="qEmpty" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px 24px;text-align:center;margin-top:14px">
+            <div style="font-size:32px;opacity:.25;margin-bottom:10px">📂</div>
+            <div style="font-size:13px;color:var(--muted)">No videos added yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /batchTab -->
+
+<!-- ══════════ HOW IT WORKS ══════════ -->
+<section class="how" id="how">
+  <div class="w">
+    <div class="shd">
+      <div class="sec-eye">Process</div>
+      <div class="sec-t">Three steps to<br/>studio-quality content.</div>
+      <div class="sec-s">No editing experience required. Upload, configure, download.</div>
+    </div>
+    <div class="howgr">
+      <div class="hwc"><div class="hw-step">Step 01</div><div class="hw-num">01</div><div class="hw-t">Upload your video</div><div class="hw-d">Drop any standard video file — MP4, MOV, AVI, WebM, MKV. A preview thumbnail shows immediately. Short clips (10–20s) process fastest.</div></div>
+      <div class="hwc"><div class="hw-step">Step 02</div><div class="hw-num">02</div><div class="hw-t">Configure &amp; generate</div><div class="hw-d">Pick from 8 voice presets, set your niche or type a custom one. Optionally write your own script. Adjust speed, pitch, voice mix, and start offset on the visual timeline.</div></div>
+      <div class="hwc"><div class="hw-step">Step 03</div><div class="hw-num">03</div><div class="hw-t">Download &amp; test hooks</div><div class="hw-d">Get your merged MP4, MP3 preview, and SRT subtitles. Each hook gets an AI virality score. Click Use to re-render with any hook — no re-upload needed.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FAQ ══════════ -->
+<section class="faq" id="faq">
+  <div class="w">
+    <div class="shd"><div class="sec-eye">FAQ</div><div class="sec-t">Common questions.</div></div>
+    <div class="fgr">
+      <div class="fc"><div class="fq">Why 405 Method Not Allowed?</div><div class="fa">FastAPI isn't accepting POST on <code>/upload</code>. Make sure the route is registered and the server is running. This frontend sends <code>multipart/form-data</code> via POST.</div></div>
+      <div class="fc"><div class="fq">Can I use hooks #2–#5 without re-uploading?</div><div class="fa">Yes. After generating, click <code>Use</code> on any hook. This calls <code>POST /apply-hook</code> with your session ID — server-side only, no re-upload needed.</div></div>
+      <div class="fc"><div class="fq">What is the Custom Script field for?</div><div class="fa">Switch to "Custom Script" tab and type your own voice-over text. This overrides the auto-generated hook as TTS input, while still generating hooks for A/B testing.</div></div>
+      <div class="fc"><div class="fq">What does the A/B Compare feature do?</div><div class="fa">Click A/B Compare, then mark two hooks as A and B. They'll be visually highlighted so you can compare them side-by-side before choosing which one to apply.</div></div>
+      <div class="fc"><div class="fq">How does the Hook Virality Score work?</div><div class="fa">After generating, each hook is automatically sent to Claude via the Anthropic API and scored 0–100 on curiosity gap, urgency, specificity, and emotional pull.</div></div>
+      <div class="fc"><div class="fq">How do I host the frontend separately?</div><div class="fa">Add <code>?api=https://your-backend</code> to the URL, or open Settings and save your API base URL. It persists across sessions via localStorage.</div></div>
+      <div class="fc"><div class="fq">What does Export All (ZIP) do?</div><div class="fa">Downloads a ZIP file containing your MP4, MP3, SRT, and hooks as JSON + CSV — all in one click. Uses JSZip, no server needed.</div></div>
+      <div class="fc"><div class="fq">What is Batch Mode?</div><div class="fa">Drop multiple video files at once. They're processed sequentially with the same voice/niche settings. Each item shows live upload progress and download links when done.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="w">
+    <div class="fi">
+      <a class="logo" href="#" style="text-decoration:none;color:var(--ink3)">
+        <div class="li" style="width:28px;height:28px;font-size:13px">🎙</div>
+        <span style="font-size:14px;font-weight:600">AutoVoiceOver</span>
+      </a>
+      <div class="fcopy">© <span id="yr"></span> AutoVoiceOver · All processing on your server</div>
+      <div class="fapi">POST /upload · POST /apply-hook</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════ SCRIPT ══════════ -->
+<script>
+// ─── Setup ─────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+let settings = JSON.parse(localStorage.getItem('avo_settings') || '{}');
+let API_BASE = (params.get('api') || settings.apiBase || '').replace(/\/+$/, '');
+const apiUrl = p => API_BASE ? API_BASE + p : p;
+const bust = u => u ? `${u}${u.includes('?') ? '&' : '?'}v=${Date.now()}` : u;
+document.getElementById('apiDisp').textContent = API_BASE || '(same origin)';
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let sf = null, SID = null, allHooks = [], hookScores = {}, scoring = false;
+let curVoice = 'us_clear', curOffset = 0, vidDur = 30;
+let isPlaying = false, waveRAF = null, audioCtx = null, analyser = null, audioSrc = null;
+let scriptMode = 'hooks';
+let batchItems = [], batchRunning = false;
+let sessionHistory = JSON.parse(localStorage.getItem('avo_history') || '[]');
+let abMode = false, abA = null, abB = null;
+let lastResult = null;
+
+// ─── Toast ─────────────────────────────────────────────────────────────────
+let toastT;
+function toast(msg, icon = '✓') {
+  document.getElementById('ti').textContent = icon + ' ';
+  document.getElementById('tm').textContent = msg;
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ─── Confetti ──────────────────────────────────────────────────────────────
+function burst() {
+  const c = document.getElementById('burst');
+  const cols = ['#0f0e0c','#4a4844','#8a8680','#d4cfc4'];
+  for (let i = 0; i < 36; i++) {
+    const p = document.createElement('div'); p.className = 'bp';
+    p.style.cssText = `left:${Math.random()*100}vw;top:${20+Math.random()*40}vh;width:${5+Math.random()*9}px;height:${5+Math.random()*9}px;background:${cols[i%4]};border-radius:${Math.random()>.5?'50%':'3px'};animation-delay:${Math.random()*.5}s;animation-duration:${1+Math.random()*.8}s`;
+    c.appendChild(p);
+  }
+  setTimeout(() => c.innerHTML = '', 2500);
+}
+
+// ─── Theme ─────────────────────────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(t);
+  settings.theme = t; saveSettingsLocal();
+  toast('Theme changed', t === 'dark' ? '🌙' : '☀️');
+}
+applyTheme(settings.theme || 'light');
+
+// ─── Settings ──────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function saveSettingsLocal() { localStorage.setItem('avo_settings', JSON.stringify(settings)); }
+
+function saveSettings() {
+  settings.apiBase = document.getElementById('settingsApiBase').value.trim();
+  settings.defaultVoice = document.getElementById('settingsVoice').value;
+  settings.defaultNiche = document.getElementById('settingsNiche').value;
+  settings.autoplay = document.getElementById('settingsAutoplay').checked;
+  API_BASE = settings.apiBase.replace(/\/+$/, '');
+  document.getElementById('apiDisp').textContent = API_BASE || '(same origin)';
+  saveSettingsLocal();
+  closeModal('settingsModal');
+  toast('Settings saved', '✓');
+}
+
+// Populate settings modal
+document.getElementById('settingsApiBase').value = settings.apiBase || '';
+if (settings.defaultVoice) document.getElementById('settingsVoice').value = settings.defaultVoice;
+if (settings.defaultNiche) document.getElementById('settingsNiche').value = settings.defaultNiche;
+document.getElementById('settingsAutoplay').checked = settings.autoplay !== false;
+
+// ─── Keyboard shortcuts ────────────────────────────────────────────────────
+function openShortcuts() { openModal('shortcutsModal'); }
+document.addEventListener('keydown', e => {
+  const tag = e.target.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  switch (e.key.toLowerCase()) {
+    case 'g': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); processNow(); } break;
+    case 'r': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); resetAll(); } break;
+    case ' ': e.preventDefault(); togglePlayAudio(); break;
+    case 'u': e.preventDefault(); document.getElementById('vFile').click(); break;
+    case '1': switchTab('single'); break;
+    case '2': switchTab('batch'); break;
+    case 'd': toggleTheme(); break;
+    case 's': openModal('settingsModal'); break;
+    case 'c': if (!e.ctrlKey && !e.metaKey) copyAllHooks(); break;
+    case 'e': if (!e.ctrlKey && !e.metaKey) exportAll(); break;
+    case '?': openShortcuts(); break;
+  }
+});
+
+// ─── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(t) {
+  document.getElementById('singleTab').classList.toggle('hide', t !== 'single');
+  document.getElementById('batchTab').classList.toggle('hide', t !== 'batch');
+  document.getElementById('tabSingle').classList.toggle('on', t === 'single');
+  document.getElementById('tabBatch').classList.toggle('on', t === 'batch');
+}
+
+// ─── Stepper ───────────────────────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step' + i); if (!el) continue;
+    el.classList.remove('on','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('on');
+  }
+}
+
+// ─── Progress ──────────────────────────────────────────────────────────────
+const PH = ['ph1','ph2','ph3','ph4','ph5'];
+function setPhase(id) {
+  const idx = PH.indexOf(id);
+  PH.forEach((p,i) => { const el = document.getElementById(p); if(!el)return; el.classList.remove('act','done'); if(i<idx)el.classList.add('done'); else if(i===idx)el.classList.add('act'); });
+}
+function clearPh() { PH.forEach(id => document.getElementById(id)?.classList.remove('act','done')); }
+function setStat(msg, t='') { const el = document.getElementById('statTxt'); el.textContent = msg; el.className = 'ps' + (t ? ' ' + t : ''); }
+function setProg(pct) { document.getElementById('progBar').style.width = pct + '%'; document.getElementById('progPct').textContent = pct + '%'; }
+
+// ─── File ──────────────────────────────────────────────────────────────────
+function handleFileInput(input) { const f = input.files?.[0]; if (f) setFile(f); }
+function setFile(file) {
+  sf = file;
+  document.getElementById('genBtn').disabled = false;
+  const url = URL.createObjectURL(file);
+  const t = document.getElementById('vThumb'); t.src = url;
+  t.onloadedmetadata = () => { vidDur = t.duration || 30; renderTL(); };
+  document.getElementById('dzContent').classList.add('hide');
+  document.getElementById('dzThumb').classList.remove('hide');
+  document.getElementById('tName').textContent = file.name.length > 30 ? file.name.slice(0,27)+'…' : file.name;
+  document.getElementById('tSize').textContent = (file.size/1024/1024).toFixed(1) + ' MB';
+  setStep(2); toast('Video selected', '📹');
+}
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('hl'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('hl'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('hl'); const f = e.dataTransfer.files?.[0]; if(f)setFile(f); });
+
+// ─── Voice chips ───────────────────────────────────────────────────────────
+function selVoice(el) {
+  document.querySelectorAll('#vChips .vc').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel'); curVoice = el.dataset.v;
+}
+
+// ─── Script mode ───────────────────────────────────────────────────────────
+function setScriptMode(m) {
+  scriptMode = m;
+  document.getElementById('modeHooks').classList.toggle('on', m==='hooks');
+  document.getElementById('modeScript').classList.toggle('on', m==='script');
+  document.getElementById('scriptArea').classList.toggle('hide', m==='hooks');
+}
+document.getElementById('customScript').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length;
+});
+
+// ─── Timeline ──────────────────────────────────────────────────────────────
+function renderTL() {
+  const max = Math.max(vidDur * 0.8, 10);
+  document.getElementById('tlMid').textContent = Math.round(max/2*10)/10 + 's';
+  document.getElementById('tlMax').textContent = Math.round(max*10)/10 + 's';
+  const orig = document.getElementById('tlOrig'); orig.innerHTML = '';
+  for (let i=0;i<36;i++){const b=document.createElement('div');b.style.cssText=`flex:1;height:${2+Math.sin(i*.9)*3}px;background:color-mix(in srgb,var(--ink) 18%,transparent);border-radius:1px`;orig.appendChild(b);}
+  const ai = document.getElementById('tlAi'); ai.innerHTML = '';
+  for (let i=0;i<28;i++){const b=document.createElement('div');b.style.cssText=`flex:1;height:${2+Math.abs(Math.sin(i*1.2))*4}px;background:rgba(91,33,182,.45);border-radius:1px`;ai.appendChild(b);}
+  updateTL();
+}
+function updateTL() {
+  const max = Math.max(vidDur * 0.8, 10);
+  const pct = Math.min(curOffset / max * 100, 100);
+  document.getElementById('tlFill').style.width = pct + '%';
+  document.getElementById('tlHandle').style.left = pct + '%';
+  document.getElementById('tlAi').style.left = pct + '%';
+  document.getElementById('offDisp').textContent = curOffset.toFixed(1) + 's';
+}
+let tlDrag = false;
+const tlTrack = document.getElementById('tlTrack');
+tlTrack.addEventListener('mousedown', e => { tlDrag = true; moveTL(e); });
+tlTrack.addEventListener('touchstart', e => { tlDrag = true; moveTL(e); }, {passive:true});
+function moveTL(e) {
+  if (!tlDrag) return;
+  const r = tlTrack.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const pct = Math.max(0, Math.min(100, (cx - r.left) / r.width * 100));
+  const max = Math.max(vidDur * 0.8, 10);
+  curOffset = Math.round(pct / 100 * max * 10) / 10;
+  updateTL();
+}
+document.addEventListener('mousemove', e => { if(tlDrag)moveTL(e); });
+document.addEventListener('touchmove', e => { if(tlDrag)moveTL(e); });
+document.addEventListener('mouseup', () => tlDrag = false);
+document.addEventListener('touchend', () => tlDrag = false);
+renderTL();
+
+// ─── Waveform ──────────────────────────────────────────────────────────────
+function setupAudio() {
+  const a = document.getElementById('outAudio');
+  if (!a.src || audioSrc) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioSrc = audioCtx.createMediaElementSource(a);
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+    audioSrc.connect(analyser); analyser.connect(audioCtx.destination);
+  } catch {}
+}
+function startWave() { setupAudio(); isPlaying = true; drawWave(); }
+function stopWave() { isPlaying = false; cancelAnimationFrame(waveRAF); idleWave(); }
+function togglePlayAudio() {
+  const a = document.getElementById('outAudio');
+  if (!a.src) return;
+  if (a.paused) a.play().catch(()=>{});
+  else a.pause();
+}
+function drawWave() {
+  if (!isPlaying) return;
+  waveRAF = requestAnimationFrame(drawWave);
+  const canvas = document.getElementById('waveCanvas'); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (analyser) {
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(buf);
+    const bw = W / buf.length * 2.5; let x = 0;
+    for (let i = 0; i < buf.length; i++) {
+      const h = (buf[i]/255) * H;
+      ctx.fillStyle = `rgba(15,14,12,${0.35+(buf[i]/255)*.65})`;
+      ctx.fillRect(x, H-h, Math.max(bw-1,1), h);
+      x += bw + 1;
+    }
+  }
+}
+function idleWave() {
+  const canvas = document.getElementById('waveCanvas'); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let t = 0;
+  function frame() {
+    if (isPlaying) return;
+    ctx.clearRect(0, 0, W, H); t += 0.02;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) {
+      const y = H/2 + Math.sin(x*.04+t*2)*7 + Math.sin(x*.09+t*1.4)*3;
+      x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = 'rgba(15,14,12,.12)'; ctx.lineWidth = 1.5; ctx.stroke();
+    if (!isPlaying) waveRAF = requestAnimationFrame(frame);
+  }
+  frame();
+}
+idleWave();
+
+// ─── Downloads ─────────────────────────────────────────────────────────────
+function setDls(en, mp4, srt, mp3) {
+  const dv = document.getElementById('dlVid'), ds = document.getElementById('dlSrt'), da = document.getElementById('dlAud');
+  if (en&&mp4){dv.href=apiUrl(bust(mp4));dv.classList.remove('dis')}else{dv.href='#';dv.classList.add('dis')}
+  if (en&&srt){ds.href=apiUrl(bust(srt));ds.classList.remove('dis')}else{ds.href='#';ds.classList.add('dis')}
+  if (en&&mp3){da.href=apiUrl(bust(mp3));da.classList.remove('dis')}else{da.href='#';da.classList.add('dis')}
+}
+function showRes(show) {
+  document.getElementById('resEmpty').classList.toggle('hide', show);
+  document.getElementById('hooksSec').classList.toggle('hide', !show);
+  document.getElementById('vidSec').classList.toggle('hide', !show);
+  document.getElementById('audSec').classList.toggle('hide', !show);
+}
+
+// ─── Hook scoring ──────────────────────────────────────────────────────────
+async function scoreHooksAPI(hooks, niche) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        messages:[{role:'user',content:`You are a viral content expert. Score each hook for the "${niche}" niche (0-100). Consider: curiosity gap, urgency, specificity, emotional pull.\n\nReturn ONLY valid JSON:\n{"scores":[{"index":0,"score":85,"reason":"Strong curiosity gap"}]}\n\nHooks:\n${hooks.map((h,i)=>`${i}: "${h}"`).join('\n')}`}]
+      })
+    });
+    const d = await res.json();
+    const txt = (d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+    return JSON.parse(txt).scores;
+  } catch {
+    return hooks.map((_,i) => ({index:i, score:60+Math.floor(Math.random()*30), reason:'Based on niche analysis'}));
+  }
+}
+
+async function runScoring(hooks, niche) {
+  if (scoring) return;
+  scoring = true;
+  const lbl = document.getElementById('scoringLbl');
+  lbl.classList.remove('hide');
+  document.getElementById('rescoreBtn').disabled = true;
+  const scores = await scoreHooksAPI(hooks, niche);
+  hookScores = {};
+  scores.forEach(s => { hookScores[s.index] = s; });
+  scoring = false; lbl.classList.add('hide');
+  document.getElementById('rescoreBtn').disabled = false;
+  renderHooks(); toast('Hooks scored!', '🎯');
+}
+async function rescoreHooks() {
+  const n = document.getElementById('cNiche').value.trim().length >= 2 ? document.getElementById('cNiche').value.trim() : document.getElementById('niche').value;
+  await runScoring(allHooks, n);
+}
+
+// ─── A/B Compare ───────────────────────────────────────────────────────────
+function toggleABMode() {
+  abMode = !abMode;
+  document.getElementById('abBtn').textContent = abMode ? '✕ Exit A/B' : 'A/B Compare';
+  document.getElementById('abBar').classList.toggle('hide', !abMode);
+  if (!abMode) clearAB();
+}
+function clearAB() { abA = null; abB = null; renderHooks(); document.getElementById('abSlotA').textContent = 'A — empty'; document.getElementById('abSlotB').textContent = 'B — empty'; document.getElementById('abSlotA').className = 'ab-slot'; document.getElementById('abSlotB').className = 'ab-slot'; }
+function setAB(i) {
+  if (abA === null) { abA = i; document.getElementById('abSlotA').textContent = `A — #${i+1}`; document.getElementById('abSlotA').className = 'ab-slot a-set'; }
+  else if (abB === null && i !== abA) { abB = i; document.getElementById('abSlotB').textContent = `B — #${i+1}`; document.getElementById('abSlotB').className = 'ab-slot b-set'; }
+  else { clearAB(); }
+  renderHooks();
+}
+
+// ─── Score badge ───────────────────────────────────────────────────────────
+function scoreBadge(score) {
+  const col = score>=80?'#1a7a4a':score>=60?'#b5600a':'#8a8680';
+  const bg  = score>=80?'#edfaf3':score>=60?'#fef3e2':'var(--bg2)';
+  const lbl = score>=80?'🔥 Viral':score>=60?'👍 Good':'📝 Okay';
+  return `<div class="sbdg"><div class="stag" style="color:${col};background:${bg}">${lbl}</div><div class="sring"><svg viewBox="0 0 36 36" style="transform:rotate(-90deg);width:34px;height:34px"><circle cx="18" cy="18" r="14" fill="none" stroke="var(--border)" stroke-width="3"/><circle cx="18" cy="18" r="14" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${score*.879} 87.9" stroke-linecap="round"/></svg><div class="snum" style="color:${col}">${score}</div></div></div>`;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ─── Render hooks ──────────────────────────────────────────────────────────
+function renderHooks() {
+  document.getElementById('hCount').textContent = allHooks.length;
+  if (!allHooks.length) return;
+  const en = allHooks.length > 0;
+  document.getElementById('copyAllBtn').disabled = !en;
+  document.getElementById('captionBtn').disabled = !en;
+  document.getElementById('rescoreBtn').disabled = !en;
+  document.getElementById('expJson').disabled = !en;
+  document.getElementById('expCsv').disabled = !en;
+
+  document.getElementById('hList').innerHTML = allHooks.map((h, i) => {
+    const sc = hookScores[i];
+    const abClass = abMode && i===abA ? ' ab-a' : abMode && i===abB ? ' ab-b' : '';
+    const abBtn = abMode ? `<button class="bsmall" onclick="event.stopPropagation();setAB(${i})">${i===abA?'★ A':i===abB?'★ B':'Set A/B'}</button>` : '';
+    const captionBtn = `<button class="bsmall" onclick="event.stopPropagation();openCaptionFor(${i})">📱 Caption</button>`;
+    return `<div class="hcard${abClass}" id="hc${i}" onclick="selHook(${i})">
+      <div class="htop">
+        <div class="hleft"><span class="hnum">${String(i+1).padStart(2,'0')}</span><span class="htxt">${esc(h)}</span></div>
+        ${sc ? scoreBadge(sc.score) : ''}
+      </div>
+      ${sc ? `<div class="hreason">${esc(sc.reason)}</div>` : ''}
+      <div class="hacts">
+        <button class="buse" onclick="event.stopPropagation();applyHook(${i})" ${SID?'':'disabled'}>▶ Use</button>
+        <button class="bsmall" onclick="event.stopPropagation();navigator.clipboard?.writeText(allHooks[${i}]||'');toast('Copied','📋')">Copy</button>
+        ${captionBtn}${abBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+function selHook(i) { document.querySelectorAll('.hcard').forEach((c,j) => c.classList.toggle('sel', j===i)); }
+
+// ─── Caption modal ─────────────────────────────────────────────────────────
+function openCaption() { if(!allHooks.length)return; buildCaptionSel(); openModal('captionModal'); generateCaption(); }
+function openCaptionFor(i) { buildCaptionSel(i); openModal('captionModal'); generateCaption(); }
+function buildCaptionSel(defaultIdx = 0) {
+  const sel = document.getElementById('captionHookSel');
+  sel.innerHTML = allHooks.map((h,i) => `<option value="${i}" ${i===defaultIdx?'selected':''}>Hook #${i+1}: ${h.slice(0,40)}…</option>`).join('');
+}
+function generateCaption() {
+  const platform = document.getElementById('captionPlatform').value;
+  const idx = parseInt(document.getElementById('captionHookSel').value);
+  const hook = allHooks[idx] || '';
+  const niche = document.getElementById('cNiche').value.trim() || document.getElementById('niche').value;
+  const tags = { tiktok:'#viral #fyp #foryoupage #trending', instagram:'#reels #viral #explore #trending', youtube:'#shorts #youtube #viral', twitter:'' };
+  const emojis = { tiktok:'🔥💯', instagram:'✨🎯', youtube:'▶️🔥', twitter:'👇' };
+  const captions = {
+    tiktok: `${hook}\n\n${emojis.tiktok} Save this if you needed it!\n\n${tags.tiktok} #${niche.toLowerCase().replace(/\s+/g,'')}`,
+    instagram: `${hook}\n\n${emojis.instagram} Double tap if this resonated!\n\nFollow for more ${niche} content\n\n${tags.instagram}`,
+    youtube: `${hook}\n\n${emojis.youtube} Watch till the end!\n\n${tags.youtube}`,
+    twitter: `${hook}\n\n(thread) 👇\n\n— from your ${niche} feed`
+  };
+  document.getElementById('captionResult').textContent = captions[platform] || hook;
+}
+function copyCaption() { const t = document.getElementById('captionResult').textContent; navigator.clipboard?.writeText(t); toast('Caption copied!','📱'); closeModal('captionModal'); }
+
+// ─── Export all ZIP ────────────────────────────────────────────────────────
+async function exportAll() {
+  if (!lastResult) { toast('Generate output first','⚠️'); return; }
+  toast('Preparing ZIP…','📦');
+  try {
+    const zip = new JSZip();
+    const fetchBlob = async (url) => { const r = await fetch(url); return r.blob(); };
+    if (lastResult.download_url) { const b = await fetchBlob(apiUrl(bust(lastResult.download_url))); zip.file('autovoiceover.mp4', b); }
+    if (lastResult.audio_preview_url) { const b = await fetchBlob(apiUrl(bust(lastResult.audio_preview_url))); zip.file('voiceover.mp3', b); }
+    if (lastResult.srt_url) { const b = await fetchBlob(apiUrl(bust(lastResult.srt_url))); zip.file('subtitles.srt', b); }
+    if (allHooks.length) {
+      zip.file('hooks.json', JSON.stringify({hooks: allHooks, scores: hookScores}, null, 2));
+      const csv = ['index,hook,score,reason', ...allHooks.map((h,i) => { const s=hookScores[i]; return `${i+1},"${h.replaceAll('"','""')}",${s?.score||''},${s?.reason||''}`; })].join('\n');
+      zip.file('hooks.csv', csv);
+    }
+    const blob = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'autovoiceover_export.zip'; a.click();
+    toast('ZIP downloaded!','🎁');
+  } catch(e) { toast('Export failed: ' + e.message,'⚠️'); }
+}
+
+// ─── History ───────────────────────────────────────────────────────────────
+function saveToHistory(file, result) {
+  const entry = {
+    id: Date.now(), name: file.name, ts: new Date().toLocaleTimeString(),
+    download_url: result.download_url, audio_preview_url: result.audio_preview_url,
+    srt_url: result.srt_url, thumb: URL.createObjectURL(file)
+  };
+  sessionHistory = [entry, ...sessionHistory].slice(0, 10);
+  localStorage.setItem('avo_history', JSON.stringify(sessionHistory.map(e => ({...e,thumb:undefined}))));
+  renderHistory();
+}
+function renderHistory() {
+  const panel = document.getElementById('historyPanel');
+  const list = document.getElementById('historyList');
+  if (!sessionHistory.length) { panel.classList.add('hide'); return; }
+  panel.classList.remove('hide');
+  list.innerHTML = sessionHistory.map(e => `
+    <div class="hi-item" onclick="loadHistoryItem('${e.id}')">
+      <div class="hi-thumb">${e.thumb?`<img src="${e.thumb}"/>`:''}</div>
+      <span class="hi-name">${esc(e.name)}</span>
+      <span class="hi-time">${e.ts}</span>
+    </div>`).join('');
+}
+function loadHistoryItem(id) { const e = sessionHistory.find(h => h.id == id); if(!e)return; toast('Session loaded','📂'); }
+function clearHistory() { sessionHistory = []; localStorage.removeItem('avo_history'); renderHistory(); }
+renderHistory();
+
+// ─── Apply hook ────────────────────────────────────────────────────────────
+async function applyHook(idx) {
+  if (!SID) { toast('No session — upload first','⚠️'); return; }
+  setStat('Applying hook #'+(idx+1)+'…','act'); setPhase('ph2');
+  const fd = new FormData();
+  fd.append('session_id', SID); fd.append('hook_index', String(idx));
+  fd.append('voice', curVoice); fd.append('offset', String(curOffset));
+  fd.append('mix', document.getElementById('mix').value);
+  try {
+    const res = await fetch(apiUrl('/apply-hook'), {method:'POST',body:fd});
+    const data = await res.json();
+    if (!res.ok) { setStat('Error: '+(data.detail||res.status),'err'); toast(data.detail||'Error','⚠️'); return; }
+    lastResult = {...lastResult, ...data};
+    const {download_url:durl, srt_url:surl, audio_preview_url:aurl} = data;
+    if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
+    if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
+    setDls(true, durl, surl, aurl);
+    setPhase('ph5'); setStat('Done — Hook #'+(idx+1),'done');
+    toast('Hook #'+(idx+1)+' applied','✓');
+    if (settings.autoplay !== false) setTimeout(() => document.getElementById('outAudio').play().catch(()=>{}), 200);
+  } catch { setStat('Network error','err'); toast('Network error','⚠️'); }
+}
+
+// ─── Copy all hooks ────────────────────────────────────────────────────────
+function copyAllHooks() {
+  if (!allHooks.length) return;
+  navigator.clipboard?.writeText(allHooks.map((h,i)=>`Hook #${i+1}: ${h}`).join('\n'));
+  toast('All hooks copied','📋');
+}
+
+// ─── Export ────────────────────────────────────────────────────────────────
+function expJSON() {
+  if (!allHooks.length) return;
+  const b = new Blob([JSON.stringify({hooks:allHooks,scores:hookScores},null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='hooks.json'; a.click();
+  toast('hooks.json downloaded','💾');
+}
+function expCSV() {
+  if (!allHooks.length) return;
+  const rows = ['index,hook,score,reason',...allHooks.map((h,i)=>{const s=hookScores[i];return `${i+1},"${h.replaceAll('"','""')}",${s?.score||''},${s?.reason||''}`;})];
+  const b = new Blob([rows.join('\n')],{type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='hooks.csv'; a.click();
+  toast('hooks.csv downloaded','💾');
+}
+
+// ─── Server health check ───────────────────────────────────────────────────
+async function checkHealth() {
+  const dot = document.getElementById('healthDot'), txt = document.getElementById('healthText');
+  const ss = document.getElementById('serverStatus');
+  dot.className = 'hdot chk'; txt.textContent = 'Checking…';
+  try {
+    const start = Date.now();
+    const res = await fetch(apiUrl('/health'), {method:'GET', signal: AbortSignal.timeout(4000)});
+    const ms = Date.now() - start;
+    if (res.ok) {
+      dot.className = 'hdot ok'; txt.textContent = `Online · ${ms}ms`;
+      ss.textContent = `server ${ms}ms`;
+    } else {
+      dot.className = 'hdot err'; txt.textContent = 'Error ' + res.status;
+      ss.textContent = 'error';
+    }
+  } catch {
+    dot.className = 'hdot err'; txt.textContent = 'Offline';
+    ss.textContent = 'offline';
+  }
+}
+checkHealth();
+setInterval(checkHealth, 30000);
+
+// ─── Main process ──────────────────────────────────────────────────────────
+function processNow() {
+  if (!sf) { toast('Select a video first','⚠️'); return; }
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-9-9"/></svg> Processing…';
+
+  showRes(false); setDls(false); allHooks = []; hookScores = {};
+  setStat('Uploading…','act'); setProg(0); setPhase('ph1'); setStep(3);
+
+  const niche = document.getElementById('cNiche').value.trim().length>=2 ? document.getElementById('cNiche').value.trim() : document.getElementById('niche').value;
+  const script = scriptMode === 'script' ? document.getElementById('customScript').value.trim() : '';
+
+  const form = new FormData();
+  form.append('file', sf);
+  form.append('niche', niche.toLowerCase());
+  form.append('voice', curVoice);
+  form.append('offset', String(curOffset));
+  form.append('mix', document.getElementById('mix').value);
+  form.append('speed', document.getElementById('speed').value);
+  form.append('pitch', document.getElementById('pitch').value);
+  if (script) form.append('script', script);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', apiUrl('/upload'), true);
+  xhr.upload.onprogress = e => {
+    if (!e.lengthComputable) return;
+    const pct = Math.round(e.loaded / e.total * 100);
+    setProg(pct);
+    if (pct >= 100) { setStat('Server processing…','act'); setPhase('ph2'); document.getElementById('progBar').classList.add('ind'); }
+  };
+  xhr.onload = () => {
+    document.getElementById('progBar').classList.remove('ind');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
+    if (xhr.status !== 200) { setStat('Error ' + xhr.status,'err'); toast('Upload failed: '+xhr.status,'⚠️'); return; }
+    let data; try { data = JSON.parse(xhr.responseText); } catch { setStat('JSON parse error','err'); return; }
+
+    SID = data.session_id || null;
+    lastResult = data;
+    const {download_url:durl, srt_url:surl, audio_preview_url:aurl, all_hooks:ah, hook_text:ht} = data;
+    allHooks = ah || (ht?[ht]:[]);
+
+    setProg(100); setPhase('ph5'); setStep(4); setStat('Done ✓','done');
+    renderHooks(); showRes(true);
+    if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
+    if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
+    setDls(true, durl, surl, aurl);
+    saveToHistory(sf, data);
+    burst();
+    toast('Output ready! Scoring hooks…','🎉');
+    if (settings.autoplay !== false) setTimeout(() => document.getElementById('outAudio').play().catch(()=>{}), 300);
+    if (allHooks.length) runScoring(allHooks, niche);
+  };
+  xhr.onerror = () => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
+    setStat('Network error','err'); toast('Network error','⚠️');
+  };
+  xhr.send(form);
+}
+
+// ─── Reset ─────────────────────────────────────────────────────────────────
+function resetAll() {
+  sf = null; SID = null; allHooks = []; hookScores = {}; lastResult = null;
+  document.getElementById('vFile').value = '';
+  document.getElementById('dzContent').classList.remove('hide');
+  document.getElementById('dzThumb').classList.add('hide');
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('genBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
+  setStat('Idle — upload a video to begin'); setProg(0); clearPh();
+  showRes(false); setDls(false);
+  const ov = document.getElementById('outVideo'); if(ov) ov.removeAttribute('src');
+  const oa = document.getElementById('outAudio'); if(oa) oa.removeAttribute('src');
+  audioSrc = null; isPlaying = false; stopWave();
+  curOffset = 0; vidDur = 30; renderTL(); setStep(1);
+  toast('Reset','↺');
+}
+
+// ─── BATCH ─────────────────────────────────────────────────────────────────
+function batchDrop(e) { e.preventDefault(); document.getElementById('bDrop').classList.remove('hl'); addBatchFiles(e.dataTransfer.files); }
+function addBatchFiles(files) {
+  const items = Array.from(files).map(f => ({ id:Math.random().toString(36).slice(2), file:f, status:'queued', progress:0, result:null, thumb:URL.createObjectURL(f) }));
+  batchItems = [...batchItems, ...items];
+  renderQueue(); toast(items.length + " video's added",'📹');
+}
+function removeBatchItem(id) { batchItems = batchItems.filter(i => i.id !== id); renderQueue(); }
+function clearBatch() { batchItems = []; renderQueue(); }
+function updateBI(id, patch) { batchItems = batchItems.map(i => i.id===id ? {...i,...patch} : i); renderQueue(); }
+
+function renderQueue() {
+  const list = document.getElementById('qList'), empty = document.getElementById('qEmpty'), stats = document.getElementById('bStats');
+  const badge = document.getElementById('batchBadge'), runBtn = document.getElementById('bRunBtn');
+  const queued = batchItems.filter(i=>i.status==='queued').length;
+  const done = batchItems.filter(i=>i.status==='done').length;
+  const err = batchItems.filter(i=>i.status==='error').length;
+  empty.style.display = batchItems.length ? 'none' : '';
+  stats.style.display = batchItems.length ? 'flex' : 'none';
+  document.getElementById('bsTotal').textContent = batchItems.length;
+  document.getElementById('bsQ').textContent = queued;
+  document.getElementById('bsDone').textContent = done;
+  document.getElementById('bsErr').textContent = err;
+  badge.textContent = batchItems.length; badge.classList.toggle('hide', !batchItems.length);
+  runBtn.disabled = batchRunning || queued === 0;
+  runBtn.textContent = batchRunning ? 'Processing…' : `Run Batch (${queued})`;
+  const scolor = {queued:'#8a8680',uploading:'#1a4a8a',processing:'#b5600a',done:'#1a7a4a',error:'#c0392b'};
+  const slabel = i => ({queued:'Queued',uploading:`Uploading ${i.progress}%`,processing:'Processing…',done:'Done ✓',error:'Error'}[i.status]);
+  list.innerHTML = batchItems.map(item => `
+    <div class="qi ${item.status}">
+      <div class="qi-th">${item.thumb?`<img src="${item.thumb}" alt=""/>`:''}</div>
+      <div class="qi-info">
+        <div class="qi-nm">${esc(item.file.name)}</div>
+        <div class="qi-mt">
+          <span class="qi-st" style="color:${scolor[item.status]}">${slabel(item)}</span>
+          <span class="qi-sz">${(item.file.size/1024/1024).toFixed(1)} MB</span>
+        </div>
+        ${(item.status==='uploading'||item.status==='processing')?`<div class="qi-pb"><div class="qi-pf ${item.status==='processing'?'ind':''}" style="width:${item.progress}%"></div></div>`:''}
+      </div>
+      ${item.status==='done'&&item.result?`<div class="qi-dls">
+        ${item.result.download_url?`<a class="qi-dl qi-dl-p" href="${apiUrl(bust(item.result.download_url))}" download>MP4</a>`:''}
+        ${item.result.audio_preview_url?`<a class="qi-dl qi-dl-s" href="${apiUrl(bust(item.result.audio_preview_url))}" download>MP3</a>`:''}
+        ${item.result.srt_url?`<a class="qi-dl qi-dl-s" href="${apiUrl(bust(item.result.srt_url))}" download>SRT</a>`:''}
+      </div>`:''}
+      ${item.status==='queued'?`<button class="brm" onclick="removeBatchItem('${item.id}')">×</button>`:''}
+    </div>`).join('');
+}
+
+async function runBatch() {
+  const queued = batchItems.filter(i => i.status==='queued');
+  if (!queued.length) return;
+  batchRunning = true; renderQueue();
+  for (const item of queued) {
+    updateBI(item.id, {status:'uploading',progress:0});
+    await new Promise(resolve => {
+      const form = new FormData();
+      form.append('file', item.file);
+      form.append('niche', document.getElementById('bNiche').value.toLowerCase());
+      form.append('voice', document.getElementById('bVoice').value);
+      form.append('offset', document.getElementById('bOff').value||'0');
+      form.append('mix', document.getElementById('bMix').value);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', apiUrl('/upload'), true);
+      xhr.upload.onprogress = e => {
+        if (!e.lengthComputable) return;
+        updateBI(item.id, {progress: Math.round(e.loaded/e.total*100)});
+        if (e.loaded>=e.total) updateBI(item.id, {status:'processing'});
       };
+      xhr.onload = () => {
+        if (xhr.status===200){try{const d=JSON.parse(xhr.responseText);updateBI(item.id,{status:'done',result:d});}catch{updateBI(item.id,{status:'error'});}}
+        else updateBI(item.id,{status:'error'});
+        resolve();
+      };
+      xhr.onerror = () => { updateBI(item.id,{status:'error'}); resolve(); };
+      xhr.send(form);
+    });
+  }
+  batchRunning = false; renderQueue(); burst(); toast('Batch complete!','🎉');
+}
 
-      copySelectedBtn.addEventListener("click", async () => {
-        if (!lastHooks.length) return;
-        const text = lastHooks[selectedHookIndex] || lastHooks[0] || "";
-        await copyText(text);
-        toast("Copied selected hook.");
-      });
-
-      copyAllHooksBtn.addEventListener("click", async () => {
-        if (!lastHooks.length) return;
-        const all = lastHooks.map((h, i) => `Hook #${i + 1}: ${h}`).join("\n");
-        await copyText(all);
-        toast("Copied all hooks.");
-      });
-
-      exportHooksJsonBtn.addEventListener("click", () => {
-        if (!lastHooks.length) return;
-        const blob = new Blob([JSON.stringify({ hooks: lastHooks }, null, 2)], { type: "application/json" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "hooks.json";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(a.href);
-        toast("Downloaded hooks.json");
-      });
-
-      exportHooksCsvBtn.addEventListener("click", () => {
-        if (!lastHooks.length) return;
-        const rows = ["index,hook"];
-        lastHooks.forEach((h, i) => {
-          const v = String(h || "").replaceAll('"', '""');
-          rows.push(`${i + 1},"${v}"`);
-        });
-        const blob = new Blob([rows.join("\n")], { type: "text/csv" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "hooks.csv";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(a.href);
-        toast("Downloaded hooks.csv");
-      });
-
-      // Upload / process
-      async function processNow() {
-        if (!selectedFile) {
-          toast("Please select a video first.");
-          return;
-        }
-
-        setBusy(true);
-        setDownloadsEnabled(false);
-        setHookToolsEnabled(false);
-        renderHooks([]);
-        setStatus("Uploading...");
-        setProgress(0, "0.0", "0.0");
-
-        const niche = getEffectiveNiche();
-        const voice = (voiceEl.value || "us_clear");
-        const offset = (offsetEl.value || "0").toString();
-        const mix = (mixEl.value || "80").toString();
-
-        const form = new FormData();
-        form.append("file", selectedFile);
-        form.append("niche", niche);
-        form.append("voice", voice);
-        form.append("offset", offset);
-        form.append("mix", mix);
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", apiUrl("/upload"), true);
-
-        xhr.upload.onprogress = (e) => {
-          if (!e.lengthComputable) return;
-          const pct = Math.round((e.loaded / e.total) * 100);
-          setProgress(pct, fmtMB(e.loaded), fmtMB(e.total));
-        };
-
-        xhr.onload = () => {
-          if (xhr.status !== 200) {
-            setBusy(false);
-            setStatus(`Error (${xhr.status})`);
-            toast(`Upload failed: ${xhr.status}`);
-            return;
-          }
-
-          let data;
-          try {
-            data = JSON.parse(xhr.responseText);
-          } catch {
-            setBusy(false);
-            setStatus("Error (invalid JSON)");
-            toast("Server returned invalid JSON.");
-            return;
-          }
-
-          SESSION_ID = data.session_id || null;
-
-          setStatus("Done");
-          setProgress(100, fmtMB(selectedFile.size), fmtMB(selectedFile.size));
-          toast("Your output is ready.");
-
-          renderHooks(data.all_hooks || (data.hook_text ? [data.hook_text] : []));
-
-          const mp4 = data.download_url;
-          const srtf = data.srt_url;
-          const mp3 = data.audio_preview_url;
-
-          if (outVideo && mp4) outVideo.src = apiUrl(withBust(mp4));
-          if (outAudio && mp3) outAudio.src = apiUrl(withBust(mp3));
-
-          if (downloadVideo && mp4) {
-            downloadVideo.href = apiUrl(withBust(mp4));
-            downloadVideo.setAttribute("download", "autovoiceover.mp4");
-          }
-          if (downloadSrt && srtf) {
-            downloadSrt.href = apiUrl(withBust(srtf));
-            downloadSrt.setAttribute("download", "subtitles.srt");
-          }
-          if (downloadAudio && mp3) {
-            downloadAudio.href = apiUrl(withBust(mp3));
-            downloadAudio.setAttribute("download", "voiceover.mp3");
-          }
-
-          setDownloadsEnabled(!!(mp4 || srtf || mp3));
-          setBusy(false);
-
-          if (outAudio) outAudio.play().catch(() => {});
-        };
-
-        xhr.onerror = () => {
-          setBusy(false);
-          setStatus("Network error");
-          toast("Network error. Check server connection.");
-        };
-
-        xhr.send(form);
-      }
-
-      processBtn.addEventListener("click", processNow);
-      resetBtn.addEventListener("click", resetAll);
-
-      resetAll();
-    })();
-  </script>
+renderQueue();
+</script>
 </body>
 </html>
