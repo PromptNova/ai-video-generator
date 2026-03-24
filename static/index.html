@@ -512,7 +512,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
         <div class="card">
           <div class="ch"><div class="ct">Video Upload</div><div class="csub">Drag &amp; drop or click to browse</div></div>
           <div class="cb">
-            <div class="dz" id="dropZone" role="button" tabindex="0" onclick="if(!selectedFile)document.getElementById('vFile').click()">
+            <div class="dz" id="dropZone" role="button" tabindex="0" onclick="document.getElementById('vFile').click()">
               <input id="vFile" type="file" accept="video/*" class="hide" onchange="handleFileInput(this)"/>
               <div id="dzContent" class="dz-in">
                 <div class="dz-ic">📹</div>
