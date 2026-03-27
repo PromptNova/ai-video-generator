@@ -517,7 +517,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
               <div id="dzContent" class="dz-in">
                 <div class="dz-ic">ðŸ“¹</div>
                 <div class="dz-t">Drop your video here</div>
-                <div class="dz-s">or click to select Â· <kbd style="font-family:var(--mono);background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:10px">U</kbd> key</div>
+                <div class="dz-s">or click to select · <kbd style="font-family:var(--mono);background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:10px">U</kbd> key</div>
                 <div class="dz-f"><span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WebM</span><span class="fmt">MKV</span></div>
               </div>
               <div id="dzThumb" class="hide">
@@ -594,7 +594,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div class="divider"></div>
 
             <!-- Mix -->
-            <div class="mixr"><span>Voice Mix</span><span>AI: <strong id="mixLbl">80</strong>% Â· Original: <strong id="origLbl">20</strong>%</span></div>
+            <div class="mixr"><span>Voice Mix</span><span>AI: <strong id="mixLbl">80</strong>% · Original: <strong id="origLbl">20</strong>%</span></div>
             <div class="mixrow">
               <span class="rend">Original</span>
               <input type="range" id="mix" min="0" max="100" value="80" oninput="document.getElementById('mixLbl').textContent=this.value;document.getElementById('origLbl').textContent=100-this.value"/>
@@ -659,7 +659,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div style="padding:48px 24px;text-align:center;border-top:1px solid var(--border);margin-top:16px">
               <div style="font-size:36px;opacity:.25;margin-bottom:12px">ðŸŽ¬</div>
               <div style="font-size:13px;color:var(--muted)">Configure left and click Generate Output</div>
-              <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-top:8px">Press G to generate Â· Space to play</div>
+              <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-top:8px">Press G to generate · Space to play</div>
             </div>
           </div>
 
@@ -714,7 +714,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
           </div>
 
           <div style="padding:12px 20px;border-top:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--muted2)">
-            API: <span id="apiDisp"></span> Â· <span id="serverStatus"></span>
+            API: <span id="apiDisp"></span> · <span id="serverStatus"></span>
           </div>
         </div>
       </div>
@@ -766,7 +766,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <input id="bInput" type="file" accept="video/*" multiple class="hide" onchange="addBatchFiles(this.files)"/>
             <div style="font-size:22px;margin-bottom:10px">ðŸ“¥</div>
             <div style="font-size:14px;font-weight:600">Drop multiple videos here</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)">or click to browse Â· multiple files OK</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)">or click to browse · multiple files OK</div>
           </div>
           <div class="bstats" id="bStats" style="display:none">
             <div class="bstat"><div class="bsn" id="bsTotal" style="color:var(--ink3)">0</div><div class="bsl">Total</div></div>
@@ -827,8 +827,8 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
         <div class="li" style="width:28px;height:28px;font-size:13px">ðŸŽ™</div>
         <span style="font-size:14px;font-weight:600">AutoVoiceOver</span>
       </a>
-      <div class="fcopy">Â© <span id="yr"></span> AutoVoiceOver Â· All processing on your server</div>
-      <div class="fapi">POST /upload Â· POST /apply-hook</div>
+      <div class="fcopy">Â© <span id="yr"></span> AutoVoiceOver · All processing on your server</div>
+      <div class="fapi">POST /upload · POST /apply-hook</div>
     </div>
   </div>
 </footer>
@@ -1327,7 +1327,7 @@ async function checkHealth() {
     const res = await fetch(apiUrl('/health'), {method:'GET', signal: AbortSignal.timeout(4000)});
     const ms = Date.now() - start;
     if (res.ok) {
-      dot.className = 'hdot ok'; txt.textContent = `Online Â· ${ms}ms`;
+      dot.className = 'hdot ok'; txt.textContent = `Online · ${ms}ms`;
       ss.textContent = `server ${ms}ms`;
     } else {
       dot.className = 'hdot err'; txt.textContent = 'Error ' + res.status;
