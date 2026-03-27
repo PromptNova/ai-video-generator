@@ -436,7 +436,7 @@ async def root():
     """Serve the frontend index.html."""
     index_path = STATIC_DIR / "index.html"
     if index_path.exists():
-        return FileResponse(index_path)
+        return FileResponse(index_path, media_type="text/html; charset=utf-8")
     return JSONResponse(
         {"status": "ok", "message": "Backend running — place index.html in /static"},
         status_code=200,
