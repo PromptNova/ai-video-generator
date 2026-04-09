@@ -1,6 +1,6 @@
 """
-AutoVoiceOver Studio — Backend Server
-Perfectly tuned for AutoVoiceOver Studio frontend.
+VoxShorts — Backend Server
+Perfectly tuned for VoxShorts frontend.
 
 Endpoints:
   GET  /              → serve index.html
@@ -35,7 +35,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-log = logging.getLogger("autovoiceover")
+log = logging.getLogger("voxshorts")
 
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
@@ -46,7 +46,7 @@ STATIC_DIR   = Path("static")
 SESSIONS_DIR.mkdir(exist_ok=True)
 STATIC_DIR.mkdir(exist_ok=True)
 
-SESSION_TTL_HOURS = 24
+SESSION_TTL_HOURS = 4  # Render free tier: conserve disk space
 
 ELEVENLABS_VOICES = {
     "us_clear":  "21m00Tcm4TlvDq8ikWAM",
@@ -57,12 +57,15 @@ ELEVENLABS_VOICES = {
     "calm":      "pNInz6obpgDQGcFmaJgB",
     "deep":      "yoZ06aMxZJJ28mfd3POQ",
     "warm":      "ThT5KcBeYPX3keUQqHPh",
+    "us_fast":  "21m00Tcm4TlvDq8ikWAM",  # alias of us_clear, speed handled by TTS
+    "uk_calm":  "AZnzlk1XvdvUeBnXmlld",  # alias of uk_clear, calm variant
 }
 
 OPENAI_VOICES = {
     "us_clear": "alloy", "uk_clear": "echo", "au_clear": "fable",
     "in_clear": "onyx",  "energetic": "nova", "calm": "shimmer",
     "deep": "onyx",      "warm": "nova",
+    "us_fast": "alloy", "uk_calm": "echo",
 }
 
 NICHE_PROMPTS = {
@@ -78,7 +81,7 @@ NICHE_PROMPTS = {
     "lifestyle":  "aspirational, relatable, visual",
 }
 
-app = FastAPI(title="AutoVoiceOver Studio API", version="2.0.0")
+app = FastAPI(title="VoxShorts API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -431,6 +434,12 @@ async def cleanup_session_files(session_dir: Path, delay: int = 3600):
 #  ROUTES
 # ═══════════════════════════════════════════════
 
+@app.get("/ping")
+async def ping():
+    """Lightweight liveness probe — no external API calls."""
+    return {"status": "ok", "version": "2.0.0"}
+
+
 @app.get("/")
 async def root():
     """Serve the frontend index.html."""
@@ -563,6 +572,8 @@ async def apply_hook(
     voice:       str   = Form("us_clear"),
     offset:      float = Form(0.0),
     mix:         str   = Form("80"),
+    speed:       float = Form(1.0),
+    pitch:       float = Form(0.0),
     fade_in:     int   = Form(0),
     fade_out:    int   = Form(0),
 ):
@@ -579,7 +590,7 @@ async def apply_hook(
     session_dir = STATIC_DIR / session_id
     audio_path  = session_dir / f"voiceover_h{hook_index}.mp3"
 
-    await generate_tts(hook_text, voice, audio_path)
+    await generate_tts(hook_text, voice, audio_path, speed=speed, pitch=pitch)
     result_path = await process_video(
         Path(session["video_path"]), audio_path,
         session_dir / f"output_h{hook_index}.mp4",
