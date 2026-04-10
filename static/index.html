@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>VoxShorts — AI Voice Studio</title>
+<title>VoxShorts â AI Voice Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -11,7 +11,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-/* ─── THEME TOKENS ─── */
+/* âââ THEME TOKENS âââ */
 [data-theme="light"]{
   --bg:#f8f7f4;--bg2:#f2f0eb;--bg3:#ebe8e1;
   --surface:#ffffff;--surface2:#f8f7f4;
@@ -50,7 +50,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .w{max-width:1280px;margin:0 auto;padding:0 28px}
 @media(max-width:768px){.w{padding:0 16px}}
 
-/* ─── HEADER ─── */
+/* âââ HEADER âââ */
 header{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(20px) saturate(1.6);border-bottom:1px solid var(--border);transition:background .25s}
 .hi{display:flex;align-items:center;justify-content:space-between;height:60px;gap:12px}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
@@ -70,13 +70,13 @@ header{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--bg) 
 .hdot.chk{background:var(--amber);animation:spin .8s linear infinite}
 @media(max-width:700px){.health,.hbtn.hide-sm{display:none}}
 
-/* ─── CARDS ─── */
+/* âââ CARDS âââ */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s1);overflow:hidden;transition:background .25s,border-color .25s}
 .ch{padding:20px 24px 0}.ct{font-size:15px;font-weight:600;letter-spacing:-.01em}.csub{font-size:13px;color:var(--muted);margin-top:3px}
 .cb{padding:16px 24px 24px}
 .divider{height:1px;background:var(--border);margin:18px 0}
 
-/* ─── STUDIO LAYOUT ─── */
+/* âââ STUDIO LAYOUT âââ */
 .studio{padding:32px 0 80px}
 .stepr{display:flex;align-items:center;gap:3px;margin-bottom:28px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:6px 8px;width:fit-content}
 .sti{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted);transition:all .3s}
@@ -90,7 +90,7 @@ header{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--bg) 
 @media(max-width:900px){.sgrid{grid-template-columns:1fr}}
 .lcol{display:flex;flex-direction:column;gap:20px}
 
-/* ─── DROPZONE ─── */
+/* âââ DROPZONE âââ */
 .dz{border:1.5px dashed var(--border2);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all .2s;background:var(--bg2)}
 .dz:hover,.dz.hl{border-color:var(--ink);background:var(--bg3)}
 .dz-in{padding:40px 24px;text-align:center}
@@ -106,7 +106,7 @@ header{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--bg) 
 .tchg{font-size:11px;background:var(--surface);border:1px solid var(--border2);border-radius:999px;padding:4px 10px;cursor:pointer;color:var(--ink3);font-family:var(--sans);transition:background .15s;flex-shrink:0}
 .tchg:hover{background:var(--bg3)}
 
-/* ─── FIELDS ─── */
+/* âââ FIELDS âââ */
 .fl{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 input[type="text"],input[type="number"],input[type="password"],select,textarea{
   width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;
@@ -122,7 +122,7 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
 @media(max-width:520px){.fr2,.fr3{grid-template-columns:1fr}}
 .s2{grid-column:1/-1}
 
-/* ─── VOICE CHIPS ─── */
+/* âââ VOICE CHIPS âââ */
 .vgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 @media(max-width:520px){.vgrid{grid-template-columns:repeat(2,1fr)}}
 .vc{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .2s;font-size:11px;font-weight:600;color:var(--muted);text-align:center;user-select:none}
@@ -130,7 +130,7 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
 .vc.sel{border-color:var(--ink);background:var(--ink);color:var(--invert-fg)}
 .vc .flag{font-size:20px;line-height:1}
 
-/* ─── MIX + RANGE ─── */
+/* âââ MIX + RANGE âââ */
 .mixr{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--muted)}
 .mixr strong{font-family:var(--mono);font-weight:500;color:var(--ink)}
 .mixrow{display:flex;align-items:center;gap:10px}
@@ -139,7 +139,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;hei
 input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .rend{font-size:10px;font-family:var(--mono);color:var(--muted);flex-shrink:0}
 
-/* ─── TIMELINE ─── */
+/* âââ TIMELINE âââ */
 .tl{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;user-select:none}
 .tlh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .tll{font-size:11px;font-family:var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
@@ -156,17 +156,17 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .tl-li{display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);color:var(--muted)}
 .tl-ln{width:20px;height:3px;border-radius:999px}
 
-/* ─── SCRIPT EDITOR ─── */
+/* âââ SCRIPT EDITOR âââ */
 .script-tabs{display:flex;gap:0;margin-bottom:12px;background:var(--bg2);border-radius:10px;padding:3px;border:1px solid var(--border)}
 .stab{flex:1;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;background:transparent;color:var(--muted);text-align:center}
 .stab.on{background:var(--surface);color:var(--ink);box-shadow:var(--s1)}
 .script-hint{font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px}
 .char-count{text-align:right;font-size:10px;font-family:var(--mono);color:var(--muted2);margin-top:4px}
 
-/* ─── SPEED/PITCH ─── */
+/* âââ SPEED/PITCH âââ */
 .sp-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
-/* ─── ACTIONS ─── */
+/* âââ ACTIONS âââ */
 .arow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .bgen{flex:1;min-width:160px;background:var(--ink);color:var(--invert-fg);border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s;box-shadow:var(--s2)}
 .bgen:hover:not(:disabled){opacity:.82;transform:translateY(-1px)}
@@ -174,7 +174,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .bghost{background:var(--bg2);color:var(--ink3);border:1.5px solid var(--border2);border-radius:999px;padding:13px 18px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:all .2s}
 .bghost:hover{border-color:var(--ink3);color:var(--ink)}
 
-/* ─── PROGRESS ─── */
+/* âââ PROGRESS âââ */
 .pcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:14px}
 .pr{display:flex;justify-content:space-between;margin-bottom:10px}
 .ps{font-size:12px;font-weight:500;color:var(--muted)}.ps.act{color:var(--blue)}.ps.done{color:var(--green)}.ps.err{color:var(--red)}
@@ -187,7 +187,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .ph.act{border-color:#93c5fd;color:var(--blue);background:rgba(26,74,138,.07)}
 .ph.done{border-color:#bbf7d0;color:var(--green);background:rgba(26,122,74,.06)}
 
-/* ─── RESULTS / HOOKS ─── */
+/* âââ RESULTS / HOOKS âââ */
 .hh{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)}
 .htit{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
 .hbdg{font-size:10px;font-family:var(--mono);background:var(--bg2);color:var(--muted);padding:2px 8px;border-radius:999px}
@@ -214,14 +214,14 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .bsmall{font-size:11px;background:transparent;border:1.5px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--muted);font-family:var(--sans);transition:all .2s;white-space:nowrap}
 .bsmall:hover{color:var(--ink3);border-color:var(--ink3)}
 
-/* ─── SCORE BADGE ─── */
+/* âââ SCORE BADGE âââ */
 .sbdg{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .stag{font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
 .sring{position:relative;width:34px;height:34px;flex-shrink:0}
 .sring svg{transform:rotate(-90deg);width:34px;height:34px}
 .snum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:var(--mono)}
 
-/* ─── A/B COMPARE ─── */
+/* âââ A/B COMPARE âââ */
 .ab-bar{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .ab-label{font-size:12px;font-weight:600;color:var(--ink3)}
 .ab-slot{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--border);font-size:12px;font-family:var(--mono);color:var(--muted)}
@@ -230,7 +230,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .ab-vs{font-size:11px;font-family:var(--mono);color:var(--muted2);padding:0 4px}
 .ab-clear{font-size:11px;background:transparent;border:none;cursor:pointer;color:var(--muted);font-family:var(--mono);text-decoration:underline}
 
-/* ─── MEDIA ─── */
+/* âââ MEDIA âââ */
 .msec{border-top:1px solid var(--border)}
 .mlbl{font-size:10px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 20px 8px}
 #outVideo{width:100%;display:block;aspect-ratio:16/9;background:#000}
@@ -245,7 +245,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .dlp{background:var(--ink);color:var(--invert-fg)}.dlp:hover{opacity:.8;transform:translateY(-1px)}
 .dls{background:var(--bg2);border:1.5px solid var(--border2);color:var(--ink3)}.dls:hover{background:var(--surface);border-color:var(--ink3);transform:translateY(-1px)}
 
-/* ─── HISTORY PANEL ─── */
+/* âââ HISTORY PANEL âââ */
 .history-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s1);overflow:hidden;margin-bottom:20px}
 .hp-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .hp-title{font-size:13px;font-weight:600}
@@ -259,7 +259,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .hi-time{font-size:10px;font-family:var(--mono);color:var(--muted2);flex-shrink:0}
 .hi-empty{padding:24px;text-align:center;font-size:12px;color:var(--muted);font-family:var(--mono)}
 
-/* ─── BATCH ─── */
+/* âââ BATCH âââ */
 .batch-drop{border:1.5px dashed var(--border2);border-radius:16px;padding:28px 24px;text-align:center;cursor:pointer;background:var(--surface);transition:all .2s}
 .batch-drop:hover,.batch-drop.hl{border-color:var(--ink);background:var(--bg2)}
 .bstats{display:flex;gap:12px;margin-top:14px}
@@ -287,7 +287,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .brm{background:none;border:none;cursor:pointer;color:var(--muted2);font-size:16px;padding:4px;line-height:1;flex-shrink:0}
 .brm:hover{color:var(--red)}
 
-/* ─── SETTINGS MODAL ─── */
+/* âââ SETTINGS MODAL âââ */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.show{opacity:1;pointer-events:all}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s3);width:90%;max-width:460px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease}
@@ -298,16 +298,16 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .msave{width:100%;background:var(--ink);color:var(--invert-fg);border:none;border-radius:999px;padding:12px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .15s;margin-top:4px}
 .msave:hover{opacity:.82}
 
-/* ─── SHORTCUTS TOAST ─── */
+/* âââ SHORTCUTS TOAST âââ */
 .shortcuts-modal .mbody{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sk{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px}
 .sk-key{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 8px;color:var(--ink);box-shadow:0 1px 0 var(--border2)}
 .sk-lbl{font-size:12px;color:var(--muted)}
 
-/* ─── CAPTION MODAL ─── */
+/* âââ CAPTION MODAL âââ */
 .caption-result{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.65;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);color:var(--ink2);margin-top:8px;min-height:80px}
 
-/* ─── HOW IT WORKS ─── */
+/* âââ HOW IT WORKS âââ */
 .how{padding:72px 0;background:var(--surface);border-top:1px solid var(--border)}
 .sec-eye{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .sec-t{font-family:var(--serif);font-size:clamp(28px,3vw,42px);font-weight:400;letter-spacing:-.02em;line-height:1.1}
@@ -322,7 +322,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .hw-t{font-size:15px;font-weight:600;margin-bottom:8px}
 .hw-d{font-size:13px;color:var(--ink3);line-height:1.65}
 
-/* ─── FAQ ─── */
+/* âââ FAQ âââ */
 .faq{padding:72px 0;border-top:1px solid var(--border)}
 .fgr{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.fgr{grid-template-columns:1fr}}
@@ -331,13 +331,13 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .fa{font-size:13px;color:var(--ink3);line-height:1.65}
 .fa code{font-family:var(--mono);font-size:11px;background:var(--bg2);padding:1px 5px;border-radius:4px;color:var(--ink2);border:1px solid var(--border)}
 
-/* ─── FOOTER ─── */
+/* âââ FOOTER âââ */
 footer{border-top:1px solid var(--border);background:var(--surface);padding:32px 0 40px}
 .fi{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
 .fcopy{font-size:12px;color:var(--muted);font-family:var(--mono)}
 .fapi{font-size:11px;color:var(--muted2);font-family:var(--mono)}
 
-/* ─── TOAST ─── */
+/* âââ TOAST âââ */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:var(--invert-fg);padding:11px 20px;border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 12px 40px var(--shadow2);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9998;white-space:nowrap;display:flex;align-items:center;gap:8px;font-family:var(--sans)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #burst{position:fixed;inset:0;pointer-events:none;z-index:9997;overflow:hidden}
@@ -358,16 +358,16 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 <body>
 <div id="burst"></div>
 <div id="toast"><span id="ti"></span><span id="tm"></span></div>
-<button class="kbdot" onclick="openShortcuts()" title="Keyboard shortcuts">⌨ shortcuts</button>
+<button class="kbdot" onclick="openShortcuts()" title="Keyboard shortcuts">â¨ shortcuts</button>
 
-<!-- ══════════ MODALS ══════════ -->
+<!-- ââââââââââ MODALS ââââââââââ -->
 
 <!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
   <div class="modal">
     <div class="mhead">
-      <div class="mtitle">⚙️ Settings</div>
-      <button class="mclose" onclick="closeModal('settingsModal')">×</button>
+      <div class="mtitle">âï¸ Settings</div>
+      <button class="mclose" onclick="closeModal('settingsModal')">Ã</button>
     </div>
     <div class="mbody">
       <div>
@@ -378,9 +378,9 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
       <div>
         <label class="fl">Default Voice</label>
         <select id="settingsVoice">
-          <option value="us_clear">🇺🇸 US Clear</option><option value="uk_clear">🇬🇧 UK Clear</option>
-          <option value="au_clear">🇦🇺 AU Clear</option><option value="in_clear">🇮🇳 IN Clear</option>
-          <option value="energetic">⚡ Energetic</option><option value="calm">🌊 Calm</option>
+          <option value="us_clear">ðºð¸ US Clear</option><option value="uk_clear">ð¬ð§ UK Clear</option>
+          <option value="au_clear">ð¦ðº AU Clear</option><option value="in_clear">ð®ð³ IN Clear</option>
+          <option value="energetic">â¡ Energetic</option><option value="calm">ð Calm</option>
         </select>
       </div>
       <div>
@@ -409,8 +409,8 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 <div class="modal-overlay" id="shortcutsModal" onclick="if(event.target===this)closeModal('shortcutsModal')">
   <div class="modal shortcuts-modal">
     <div class="mhead">
-      <div class="mtitle">⌨️ Keyboard Shortcuts</div>
-      <button class="mclose" onclick="closeModal('shortcutsModal')">×</button>
+      <div class="mtitle">â¨ï¸ Keyboard Shortcuts</div>
+      <button class="mclose" onclick="closeModal('shortcutsModal')">Ã</button>
     </div>
     <div class="mbody">
       <div class="sk"><span class="sk-lbl">Generate output</span><span class="sk-key">G</span></div>
@@ -431,8 +431,8 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 <div class="modal-overlay" id="captionModal" onclick="if(event.target===this)closeModal('captionModal')">
   <div class="modal">
     <div class="mhead">
-      <div class="mtitle">📱 Copy as Caption</div>
-      <button class="mclose" onclick="closeModal('captionModal')">×</button>
+      <div class="mtitle">ð± Copy as Caption</div>
+      <button class="mclose" onclick="closeModal('captionModal')">Ã</button>
     </div>
     <div class="mbody">
       <div>
@@ -450,19 +450,19 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
       </div>
       <div>
         <label class="fl">Preview</label>
-        <div class="caption-result" id="captionResult">Select a hook above…</div>
+        <div class="caption-result" id="captionResult">Select a hook aboveâ¦</div>
       </div>
       <button class="msave" onclick="copyCaption()">Copy Caption</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════ HEADER ══════════ -->
+<!-- ââââââââââ HEADER ââââââââââ -->
 <header>
   <div class="w">
     <div class="hi">
       <a class="logo" href="#">
-        <div class="li">🎙</div>
+        <div class="li">ð</div>
         <div><div class="ln">VoxShorts</div><div class="lt">AI Voice Studio</div></div>
       </a>
       <div class="tabbar">
@@ -470,16 +470,16 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
         <button class="tbb" id="tabBatch" onclick="switchTab('batch')">Batch <span id="batchBadge" class="hide" style="margin-left:3px;opacity:.7;font-size:10px"></span></button>
       </div>
       <div class="hright">
-        <div class="health"><div class="hdot" id="healthDot"></div><span id="healthText">Checking…</span></div>
-        <button class="hbtn" onclick="openModal('settingsModal')">⚙️ Settings</button>
-        <button class="hbtn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
-        <button class="hbtn hide-sm" onclick="exportAll()" id="exportAllBtn" title="Export all (E)">↓ Export All</button>
+        <div class="health"><div class="hdot" id="healthDot"></div><span id="healthText">Checkingâ¦</span></div>
+        <button class="hbtn" onclick="openModal('settingsModal')">âï¸ Settings</button>
+        <button class="hbtn" id="themeBtn" onclick="toggleTheme()">ð Dark</button>
+        <button class="hbtn hide-sm" onclick="exportAll()" id="exportAllBtn" title="Export all (E)">â Export All</button>
       </div>
     </div>
   </div>
 </header>
 
-<!-- ══════════ SINGLE TAB ══════════ -->
+<!-- ââââââââââ SINGLE TAB ââââââââââ -->
 <div id="singleTab">
 <div class="studio">
   <div class="w">
@@ -496,12 +496,12 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
     <!-- Stepper -->
     <div class="stepr">
       <div class="sti on" id="step1"><div class="stn">1</div>Upload</div>
-      <div class="sarr">›</div>
+      <div class="sarr">âº</div>
       <div class="sti" id="step2"><div class="stn">2</div>Configure</div>
-      <div class="sarr">›</div>
+      <div class="sarr">âº</div>
       <div class="sti" id="step3"><div class="stn">3</div>Generate</div>
-      <div class="sarr">›</div>
-      <div class="sti" id="step4"><div class="stn">✓</div>Download</div>
+      <div class="sarr">âº</div>
+      <div class="sti" id="step4"><div class="stn">â</div>Download</div>
     </div>
 
     <div class="sgrid">
@@ -512,12 +512,12 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
         <div class="card">
           <div class="ch"><div class="ct">Video Upload</div><div class="csub">Drag &amp; drop or click to browse</div></div>
           <div class="cb">
-            <div class="dz" id="dropZone" role="button" tabindex="0" onclick="if(!selectedFile)document.getElementById('vFile').click()">
+            <div class="dz" id="dropZone" role="button" tabindex="0">
               <input id="vFile" type="file" accept="video/*" class="hide" onchange="handleFileInput(this)"/>
               <div id="dzContent" class="dz-in">
-                <div class="dz-ic">📹</div>
+                <div class="dz-ic">ð¹</div>
                 <div class="dz-t">Drop your video here</div>
-                <div class="dz-s">or click to select · <kbd style="font-family:var(--mono);background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:10px">U</kbd> key</div>
+                <div class="dz-s">or click to select Â· <kbd style="font-family:var(--mono);background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:10px">U</kbd> key</div>
                 <div class="dz-f"><span class="fmt">MP4</span><span class="fmt">MOV</span><span class="fmt">AVI</span><span class="fmt">WebM</span><span class="fmt">MKV</span></div>
               </div>
               <div id="dzThumb" class="hide">
@@ -545,7 +545,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div id="scriptArea" class="hide">
               <textarea id="customScript" rows="4" placeholder="Type your voice-over script here. This text will be used as TTS input and overrides auto-generated hooks."></textarea>
               <div class="char-count"><span id="charCount">0</span> / 1000 chars</div>
-              <div class="script-hint">📝 When script is filled, it's used as TTS text. Hooks are still generated for A/B testing.</div>
+              <div class="script-hint">ð When script is filled, it's used as TTS text. Hooks are still generated for A/B testing.</div>
             </div>
 
             <div class="divider"></div>
@@ -557,7 +557,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
               </div>
               <div>
                 <label class="fl" for="cNiche">Custom Niche</label>
-                <input id="cNiche" type="text" placeholder="real estate, crypto…"/>
+                <input id="cNiche" type="text" placeholder="real estate, cryptoâ¦"/>
               </div>
             </div>
 
@@ -566,14 +566,14 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <!-- Voice chips -->
             <label class="fl">Voice Preset</label>
             <div class="vgrid" id="vChips">
-              <div class="vc sel" data-v="us_clear" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Clear</span></div>
-              <div class="vc" data-v="uk_clear" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Clear</span></div>
-              <div class="vc" data-v="au_clear" onclick="selVoice(this)"><span class="flag">🇦🇺</span><span>AU Clear</span></div>
-              <div class="vc" data-v="in_clear" onclick="selVoice(this)"><span class="flag">🇮🇳</span><span>IN Clear</span></div>
-              <div class="vc" data-v="energetic" onclick="selVoice(this)"><span class="flag">⚡</span><span>Energetic</span></div>
-              <div class="vc" data-v="calm" onclick="selVoice(this)"><span class="flag">🌊</span><span>Calm</span></div>
-              <div class="vc" data-v="us_fast" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Fast</span></div>
-              <div class="vc" data-v="uk_calm" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Calm</span></div>
+              <div class="vc sel" data-v="us_clear" onclick="selVoice(this)"><span class="flag">ðºð¸</span><span>US Clear</span></div>
+              <div class="vc" data-v="uk_clear" onclick="selVoice(this)"><span class="flag">ð¬ð§</span><span>UK Clear</span></div>
+              <div class="vc" data-v="au_clear" onclick="selVoice(this)"><span class="flag">ð¦ðº</span><span>AU Clear</span></div>
+              <div class="vc" data-v="in_clear" onclick="selVoice(this)"><span class="flag">ð®ð³</span><span>IN Clear</span></div>
+              <div class="vc" data-v="energetic" onclick="selVoice(this)"><span class="flag">â¡</span><span>Energetic</span></div>
+              <div class="vc" data-v="calm" onclick="selVoice(this)"><span class="flag">ð</span><span>Calm</span></div>
+              <div class="vc" data-v="us_fast" onclick="selVoice(this)"><span class="flag">ðºð¸</span><span>US Fast</span></div>
+              <div class="vc" data-v="uk_calm" onclick="selVoice(this)"><span class="flag">ð¬ð§</span><span>UK Calm</span></div>
             </div>
             <input type="hidden" id="voice" value="us_clear"/>
 
@@ -582,8 +582,8 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <!-- Speed + Pitch -->
             <div class="sp-row">
               <div>
-                <div class="mixr"><span>Voice Speed</span><strong id="speedLabel">1.0×</strong></div>
-                <input type="range" id="speed" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById('speedLabel').textContent=parseFloat(this.value).toFixed(2)+'×'"/>
+                <div class="mixr"><span>Voice Speed</span><strong id="speedLabel">1.0Ã</strong></div>
+                <input type="range" id="speed" min="0.5" max="2.0" step="0.05" value="1.0" oninput="document.getElementById('speedLabel').textContent=parseFloat(this.value).toFixed(2)+'Ã'"/>
               </div>
               <div>
                 <div class="mixr"><span>Voice Pitch</span><strong id="pitchLabel">1.0</strong></div>
@@ -594,7 +594,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div class="divider"></div>
 
             <!-- Mix -->
-            <div class="mixr"><span>Voice Mix</span><span>AI: <strong id="mixLbl">80</strong>% · Original: <strong id="origLbl">20</strong>%</span></div>
+            <div class="mixr"><span>Voice Mix</span><span>AI: <strong id="mixLbl">80</strong>% Â· Original: <strong id="origLbl">20</strong>%</span></div>
             <div class="mixrow">
               <span class="rend">Original</span>
               <input type="range" id="mix" min="0" max="100" value="80" oninput="document.getElementById('mixLbl').textContent=this.value;document.getElementById('origLbl').textContent=100-this.value"/>
@@ -635,7 +635,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 
             <div class="pcard">
               <div class="pr">
-                <span class="ps" id="statTxt">Idle — upload a video to begin</span>
+                <span class="ps" id="statTxt">Idle â upload a video to begin</span>
                 <span class="ppct" id="progPct">0%</span>
               </div>
               <div class="pt"><div class="pf" id="progBar"></div></div>
@@ -657,9 +657,9 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
           <div id="resEmpty">
             <div class="ch"><div class="ct">Results</div><div class="csub">Output appears here after generating</div></div>
             <div style="padding:48px 24px;text-align:center;border-top:1px solid var(--border);margin-top:16px">
-              <div style="font-size:36px;opacity:.25;margin-bottom:12px">🎬</div>
+              <div style="font-size:36px;opacity:.25;margin-bottom:12px">ð¬</div>
               <div style="font-size:13px;color:var(--muted)">Configure left and click Generate Output</div>
-              <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-top:8px">Press G to generate · Space to play</div>
+              <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-top:8px">Press G to generate Â· Space to play</div>
             </div>
           </div>
 
@@ -669,12 +669,12 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
               <div class="htit">
                 Hook Options
                 <span class="hbdg" id="hCount">0</span>
-                <span class="hscoring hide" id="scoringLbl">🧠 scoring…</span>
+                <span class="hscoring hide" id="scoringLbl">ð§  scoringâ¦</span>
               </div>
               <div class="htools">
                 <button class="bt" id="copyAllBtn" onclick="copyAllHooks()" disabled>Copy all</button>
                 <button class="bt" id="abBtn" onclick="toggleABMode()">A/B Compare</button>
-                <button class="bt" id="captionBtn" onclick="openCaption()" disabled>📱 Caption</button>
+                <button class="bt" id="captionBtn" onclick="openCaption()" disabled>ð± Caption</button>
                 <button class="bt" id="rescoreBtn" onclick="rescoreHooks()" disabled>Re-score</button>
                 <button class="bt" id="expJson" onclick="expJSON()" disabled>JSON</button>
                 <button class="bt" id="expCsv" onclick="expCSV()" disabled>CSV</button>
@@ -685,9 +685,9 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div id="abBar" class="hide" style="padding:0 12px 0">
               <div class="ab-bar">
                 <span class="ab-label">A/B:</span>
-                <div class="ab-slot" id="abSlotA">A — empty</div>
+                <div class="ab-slot" id="abSlotA">A â empty</div>
                 <span class="ab-vs">vs</span>
-                <div class="ab-slot" id="abSlotB">B — empty</div>
+                <div class="ab-slot" id="abSlotB">B â empty</div>
                 <button class="ab-clear" onclick="clearAB()">clear</button>
               </div>
             </div>
@@ -700,8 +700,8 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div class="mlbl">Video Output</div>
             <video id="outVideo" playsinline controls></video>
             <div class="vacts">
-              <a id="dlVid" class="dlb dlp dis" href="#" download="autovoiceover.mp4">↓ MP4</a>
-              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">↓ SRT</a>
+              <a id="dlVid" class="dlb dlp dis" href="#" download="autovoiceover.mp4">â MP4</a>
+              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">â SRT</a>
             </div>
           </div>
 
@@ -710,11 +710,11 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div class="mlbl">Voice-over Preview</div>
             <div class="wwrap"><canvas id="waveCanvas" width="600" height="56"></canvas></div>
             <div class="awrap"><audio id="outAudio" controls onplay="startWave()" onpause="stopWave()" onended="stopWave()"></audio></div>
-            <div class="adl"><a id="dlAud" class="dlb dls dis" href="#" download="voiceover.mp3">↓ MP3</a></div>
+            <div class="adl"><a id="dlAud" class="dlb dls dis" href="#" download="voiceover.mp3">â MP3</a></div>
           </div>
 
           <div style="padding:12px 20px;border-top:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--muted2)">
-            API: <span id="apiDisp"></span> · <span id="serverStatus"></span>
+            API: <span id="apiDisp"></span> Â· <span id="serverStatus"></span>
           </div>
         </div>
       </div>
@@ -723,7 +723,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 </div>
 </div><!-- /singleTab -->
 
-<!-- ══════════ BATCH TAB ══════════ -->
+<!-- ââââââââââ BATCH TAB ââââââââââ -->
 <div id="batchTab" class="hide">
 <div class="studio">
   <div class="w">
@@ -740,7 +740,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
           <div class="cb" style="display:flex;flex-direction:column;gap:14px">
             <div>
               <label class="fl">Voice</label>
-              <select id="bVoice"><option value="us_clear">🇺🇸 US Clear</option><option value="uk_clear">🇬🇧 UK Clear</option><option value="au_clear">🇦🇺 AU Clear</option><option value="in_clear">🇮🇳 IN Clear</option><option value="energetic">⚡ Energetic</option><option value="calm">🌊 Calm</option></select>
+              <select id="bVoice"><option value="us_clear">ðºð¸ US Clear</option><option value="uk_clear">ð¬ð§ UK Clear</option><option value="au_clear">ð¦ðº AU Clear</option><option value="in_clear">ð®ð³ IN Clear</option><option value="energetic">â¡ Energetic</option><option value="calm">ð Calm</option></select>
             </div>
             <div>
               <label class="fl">Niche</label>
@@ -764,9 +764,9 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
         <div>
           <div class="batch-drop" id="bDrop" onclick="document.getElementById('bInput').click()" ondragover="event.preventDefault();this.classList.add('hl')" ondragleave="this.classList.remove('hl')" ondrop="batchDrop(event)">
             <input id="bInput" type="file" accept="video/*" multiple class="hide" onchange="addBatchFiles(this.files)"/>
-            <div style="font-size:22px;margin-bottom:10px">📥</div>
+            <div style="font-size:22px;margin-bottom:10px">ð¥</div>
             <div style="font-size:14px;font-weight:600">Drop multiple videos here</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)">or click to browse · multiple files OK</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)">or click to browse Â· multiple files OK</div>
           </div>
           <div class="bstats" id="bStats" style="display:none">
             <div class="bstat"><div class="bsn" id="bsTotal" style="color:var(--ink3)">0</div><div class="bsl">Total</div></div>
@@ -776,7 +776,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
           </div>
           <div class="qlist" id="qList"></div>
           <div id="qEmpty" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px 24px;text-align:center;margin-top:14px">
-            <div style="font-size:32px;opacity:.25;margin-bottom:10px">📂</div>
+            <div style="font-size:32px;opacity:.25;margin-bottom:10px">ð</div>
             <div style="font-size:13px;color:var(--muted)">No videos added yet.</div>
           </div>
         </div>
@@ -786,7 +786,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 </div>
 </div><!-- /batchTab -->
 
-<!-- ══════════ HOW IT WORKS ══════════ -->
+<!-- ââââââââââ HOW IT WORKS ââââââââââ -->
 <section class="how" id="how">
   <div class="w">
     <div class="shd">
@@ -795,47 +795,47 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
       <div class="sec-s">No editing experience required. Upload, configure, download.</div>
     </div>
     <div class="howgr">
-      <div class="hwc"><div class="hw-step">Step 01</div><div class="hw-num">01</div><div class="hw-t">Upload your video</div><div class="hw-d">Drop any standard video file — MP4, MOV, AVI, WebM, MKV. A preview thumbnail shows immediately. Short clips (10–20s) process fastest.</div></div>
+      <div class="hwc"><div class="hw-step">Step 01</div><div class="hw-num">01</div><div class="hw-t">Upload your video</div><div class="hw-d">Drop any standard video file â MP4, MOV, AVI, WebM, MKV. A preview thumbnail shows immediately. Short clips (10â20s) process fastest.</div></div>
       <div class="hwc"><div class="hw-step">Step 02</div><div class="hw-num">02</div><div class="hw-t">Configure &amp; generate</div><div class="hw-d">Pick from 8 voice presets, set your niche or type a custom one. Optionally write your own script. Adjust speed, pitch, voice mix, and start offset on the visual timeline.</div></div>
-      <div class="hwc"><div class="hw-step">Step 03</div><div class="hw-num">03</div><div class="hw-t">Download &amp; test hooks</div><div class="hw-d">Get your merged MP4, MP3 preview, and SRT subtitles. Each hook gets an AI virality score. Click Use to re-render with any hook — no re-upload needed.</div></div>
+      <div class="hwc"><div class="hw-step">Step 03</div><div class="hw-num">03</div><div class="hw-t">Download &amp; test hooks</div><div class="hw-d">Get your merged MP4, MP3 preview, and SRT subtitles. Each hook gets an AI virality score. Click Use to re-render with any hook â no re-upload needed.</div></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ FAQ ══════════ -->
+<!-- ââââââââââ FAQ ââââââââââ -->
 <section class="faq" id="faq">
   <div class="w">
     <div class="shd"><div class="sec-eye">FAQ</div><div class="sec-t">Common questions.</div></div>
     <div class="fgr">
       <div class="fc"><div class="fq">Why 405 Method Not Allowed?</div><div class="fa">FastAPI isn't accepting POST on <code>/upload</code>. Make sure the route is registered and the server is running. This frontend sends <code>multipart/form-data</code> via POST.</div></div>
-      <div class="fc"><div class="fq">Can I use hooks #2–#5 without re-uploading?</div><div class="fa">Yes. After generating, click <code>Use</code> on any hook. This calls <code>POST /apply-hook</code> with your session ID — server-side only, no re-upload needed.</div></div>
+      <div class="fc"><div class="fq">Can I use hooks #2â#5 without re-uploading?</div><div class="fa">Yes. After generating, click <code>Use</code> on any hook. This calls <code>POST /apply-hook</code> with your session ID â server-side only, no re-upload needed.</div></div>
       <div class="fc"><div class="fq">What is the Custom Script field for?</div><div class="fa">Switch to "Custom Script" tab and type your own voice-over text. This overrides the auto-generated hook as TTS input, while still generating hooks for A/B testing.</div></div>
       <div class="fc"><div class="fq">What does the A/B Compare feature do?</div><div class="fa">Click A/B Compare, then mark two hooks as A and B. They'll be visually highlighted so you can compare them side-by-side before choosing which one to apply.</div></div>
-      <div class="fc"><div class="fq">How does the Hook Virality Score work?</div><div class="fa">After generating, each hook is automatically sent to Claude via the Anthropic API and scored 0–100 on curiosity gap, urgency, specificity, and emotional pull.</div></div>
+      <div class="fc"><div class="fq">How does the Hook Virality Score work?</div><div class="fa">After generating, each hook is automatically sent to Claude via the Anthropic API and scored 0â100 on curiosity gap, urgency, specificity, and emotional pull.</div></div>
       <div class="fc"><div class="fq">How do I host the frontend separately?</div><div class="fa">Add <code>?api=https://your-backend</code> to the URL, or open Settings and save your API base URL. It persists across sessions via localStorage.</div></div>
-      <div class="fc"><div class="fq">What does Export All (ZIP) do?</div><div class="fa">Downloads a ZIP file containing your MP4, MP3, SRT, and hooks as JSON + CSV — all in one click. Uses JSZip, no server needed.</div></div>
+      <div class="fc"><div class="fq">What does Export All (ZIP) do?</div><div class="fa">Downloads a ZIP file containing your MP4, MP3, SRT, and hooks as JSON + CSV â all in one click. Uses JSZip, no server needed.</div></div>
       <div class="fc"><div class="fq">What is Batch Mode?</div><div class="fa">Drop multiple video files at once. They're processed sequentially with the same voice/niche settings. Each item shows live upload progress and download links when done.</div></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ FOOTER ══════════ -->
+<!-- ââââââââââ FOOTER ââââââââââ -->
 <footer>
   <div class="w">
     <div class="fi">
       <a class="logo" href="#" style="text-decoration:none;color:var(--ink3)">
-        <div class="li" style="width:28px;height:28px;font-size:13px">🎙</div>
+        <div class="li" style="width:28px;height:28px;font-size:13px">ð</div>
         <span style="font-size:14px;font-weight:600">VoxShorts</span>
       </a>
-      <div class="fcopy">© <span id="yr"></span> VoxShorts · All processing on your server</div>
-      <div class="fapi">POST /upload · POST /apply-hook</div>
+      <div class="fcopy">Â© <span id="yr"></span> VoxShorts Â· All processing on your server</div>
+      <div class="fapi">POST /upload Â· POST /apply-hook</div>
     </div>
   </div>
 </footer>
 
-<!-- ══════════ SCRIPT ══════════ -->
+<!-- ââââââââââ SCRIPT ââââââââââ -->
 <script>
-// ─── Setup ─────────────────────────────────────────────────────────────────
+// âââ Setup âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const params = new URLSearchParams(location.search);
 let settings = JSON.parse(localStorage.getItem('avo_settings') || '{}');
 let API_BASE = (params.get('api') || settings.apiBase || '').replace(/\/+$/, '');
@@ -844,7 +844,7 @@ const bust = u => u ? `${u}${u.includes('?') ? '&' : '?'}v=${Date.now()}` : u;
 document.getElementById('apiDisp').textContent = API_BASE || '(same origin)';
 document.getElementById('yr').textContent = new Date().getFullYear();
 
-// ─── State ─────────────────────────────────────────────────────────────────
+// âââ State âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let sf = null, SID = null, allHooks = [], hookScores = {}, scoring = false;
 let curVoice = 'us_clear', curOffset = 0, vidDur = 30;
 let isPlaying = false, waveRAF = null, audioCtx = null, analyser = null, audioSrc = null;
@@ -854,9 +854,9 @@ let sessionHistory = JSON.parse(localStorage.getItem('avo_history') || '[]');
 let abMode = false, abA = null, abB = null;
 let lastResult = null;
 
-// ─── Toast ─────────────────────────────────────────────────────────────────
+// âââ Toast âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let toastT;
-function toast(msg, icon = '✓') {
+function toast(msg, icon = 'â') {
   document.getElementById('ti').textContent = icon + ' ';
   document.getElementById('tm').textContent = msg;
   const el = document.getElementById('toast');
@@ -865,7 +865,7 @@ function toast(msg, icon = '✓') {
   toastT = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
-// ─── Confetti ──────────────────────────────────────────────────────────────
+// âââ Confetti ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function burst() {
   const c = document.getElementById('burst');
   const cols = ['#0f0e0c','#4a4844','#8a8680','#d4cfc4'];
@@ -877,20 +877,20 @@ function burst() {
   setTimeout(() => c.innerHTML = '', 2500);
 }
 
-// ─── Theme ─────────────────────────────────────────────────────────────────
+// âââ Theme âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark';
+  document.getElementById('themeBtn').textContent = t === 'dark' ? 'âï¸ Light' : 'ð Dark';
 }
 function toggleTheme() {
   const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   applyTheme(t);
   settings.theme = t; saveSettingsLocal();
-  toast('Theme changed', t === 'dark' ? '🌙' : '☀️');
+  toast('Theme changed', t === 'dark' ? 'ð' : 'âï¸');
 }
 applyTheme(settings.theme || 'light');
 
-// ─── Settings ──────────────────────────────────────────────────────────────
+// âââ Settings ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 function saveSettingsLocal() { localStorage.setItem('avo_settings', JSON.stringify(settings)); }
@@ -904,7 +904,7 @@ function saveSettings() {
   document.getElementById('apiDisp').textContent = API_BASE || '(same origin)';
   saveSettingsLocal();
   closeModal('settingsModal');
-  toast('Settings saved', '✓');
+  toast('Settings saved', 'â');
 }
 
 // Populate settings modal
@@ -913,7 +913,7 @@ if (settings.defaultVoice) document.getElementById('settingsVoice').value = sett
 if (settings.defaultNiche) document.getElementById('settingsNiche').value = settings.defaultNiche;
 document.getElementById('settingsAutoplay').checked = settings.autoplay !== false;
 
-// ─── Keyboard shortcuts ────────────────────────────────────────────────────
+// âââ Keyboard shortcuts ââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function openShortcuts() { openModal('shortcutsModal'); }
 document.addEventListener('keydown', e => {
   const tag = e.target.tagName.toLowerCase();
@@ -922,7 +922,7 @@ document.addEventListener('keydown', e => {
     case 'g': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); processNow(); } break;
     case 'r': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); resetAll(); } break;
     case ' ': e.preventDefault(); togglePlayAudio(); break;
-    case 'u': e.preventDefault(); document.getElementById('vFile').click(); break;
+    case 'u': e.preventDefault(); switchTab('single'); document.getElementById('vFile').click(); break;
     case '1': switchTab('single'); break;
     case '2': switchTab('batch'); break;
     case 'd': toggleTheme(); break;
@@ -933,7 +933,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ─── Tab switching ──────────────────────────────────────────────────────────
+// âââ Tab switching ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function switchTab(t) {
   document.getElementById('singleTab').classList.toggle('hide', t !== 'single');
   document.getElementById('batchTab').classList.toggle('hide', t !== 'batch');
@@ -941,7 +941,7 @@ function switchTab(t) {
   document.getElementById('tabBatch').classList.toggle('on', t === 'batch');
 }
 
-// ─── Stepper ───────────────────────────────────────────────────────────────
+// âââ Stepper âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setStep(n) {
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('step' + i); if (!el) continue;
@@ -951,7 +951,7 @@ function setStep(n) {
   }
 }
 
-// ─── Progress ──────────────────────────────────────────────────────────────
+// âââ Progress ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const PH = ['ph1','ph2','ph3','ph4','ph5'];
 function setPhase(id) {
   const idx = PH.indexOf(id);
@@ -961,7 +961,7 @@ function clearPh() { PH.forEach(id => document.getElementById(id)?.classList.rem
 function setStat(msg, t='') { const el = document.getElementById('statTxt'); el.textContent = msg; el.className = 'ps' + (t ? ' ' + t : ''); }
 function setProg(pct) { document.getElementById('progBar').style.width = pct + '%'; document.getElementById('progPct').textContent = pct + '%'; }
 
-// ─── File ──────────────────────────────────────────────────────────────────
+// âââ File ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function handleFileInput(input) { const f = input.files?.[0]; if (f) setFile(f); }
 function setFile(file) {
   sf = file;
@@ -971,22 +971,24 @@ function setFile(file) {
   t.onloadedmetadata = () => { vidDur = t.duration || 30; renderTL(); };
   document.getElementById('dzContent').classList.add('hide');
   document.getElementById('dzThumb').classList.remove('hide');
-  document.getElementById('tName').textContent = file.name.length > 30 ? file.name.slice(0,27)+'…' : file.name;
+  document.getElementById('tName').textContent = file.name.length > 30 ? file.name.slice(0,27)+'â¦' : file.name;
   document.getElementById('tSize').textContent = (file.size/1024/1024).toFixed(1) + ' MB';
-  setStep(2); toast('Video selected', '📹');
+  setStep(2); toast('Video selected', 'ð¹');
 }
 const dz = document.getElementById('dropZone');
+dz.addEventListener('click', () => document.getElementById('vFile').click());
+dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('vFile').click(); } });
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('hl'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('hl'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('hl'); const f = e.dataTransfer.files?.[0]; if(f)setFile(f); });
+dz.addEventListener('dragleave', e => { if (!dz.contains(e.relatedTarget)) dz.classList.remove('hl'); });
+dz.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('hl'); const f = e.dataTransfer.files?.[0]; if(f)setFile(f); });
 
-// ─── Voice chips ───────────────────────────────────────────────────────────
+// âââ Voice chips âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function selVoice(el) {
   document.querySelectorAll('#vChips .vc').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel'); curVoice = el.dataset.v;
 }
 
-// ─── Script mode ───────────────────────────────────────────────────────────
+// âââ Script mode âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setScriptMode(m) {
   scriptMode = m;
   document.getElementById('modeHooks').classList.toggle('on', m==='hooks');
@@ -997,7 +999,7 @@ document.getElementById('customScript').addEventListener('input', function() {
   document.getElementById('charCount').textContent = this.value.length;
 });
 
-// ─── Timeline ──────────────────────────────────────────────────────────────
+// âââ Timeline ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderTL() {
   const max = Math.max(vidDur * 0.8, 10);
   document.getElementById('tlMid').textContent = Math.round(max/2*10)/10 + 's';
@@ -1035,7 +1037,7 @@ document.addEventListener('mouseup', () => tlDrag = false);
 document.addEventListener('touchend', () => tlDrag = false);
 renderTL();
 
-// ─── Waveform ──────────────────────────────────────────────────────────────
+// âââ Waveform ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setupAudio() {
   const a = document.getElementById('outAudio');
   if (!a.src || audioSrc) return;
@@ -1093,7 +1095,7 @@ function idleWave() {
 }
 idleWave();
 
-// ─── Downloads ─────────────────────────────────────────────────────────────
+// âââ Downloads âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setDls(en, mp4, srt, mp3) {
   const dv = document.getElementById('dlVid'), ds = document.getElementById('dlSrt'), da = document.getElementById('dlAud');
   if (en&&mp4){dv.href=apiUrl(bust(mp4));dv.classList.remove('dis')}else{dv.href='#';dv.classList.add('dis')}
@@ -1107,7 +1109,7 @@ function showRes(show) {
   document.getElementById('audSec').classList.toggle('hide', !show);
 }
 
-// ─── Hook scoring ──────────────────────────────────────────────────────────
+// âââ Hook scoring ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function scoreHooksAPI(hooks, niche) {
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1136,39 +1138,39 @@ async function runScoring(hooks, niche) {
   scores.forEach(s => { hookScores[s.index] = s; });
   scoring = false; lbl.classList.add('hide');
   document.getElementById('rescoreBtn').disabled = false;
-  renderHooks(); toast('Hooks scored!', '🎯');
+  renderHooks(); toast('Hooks scored!', 'ð¯');
 }
 async function rescoreHooks() {
   const n = document.getElementById('cNiche').value.trim().length >= 2 ? document.getElementById('cNiche').value.trim() : document.getElementById('niche').value;
   await runScoring(allHooks, n);
 }
 
-// ─── A/B Compare ───────────────────────────────────────────────────────────
+// âââ A/B Compare âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function toggleABMode() {
   abMode = !abMode;
-  document.getElementById('abBtn').textContent = abMode ? '✕ Exit A/B' : 'A/B Compare';
+  document.getElementById('abBtn').textContent = abMode ? 'â Exit A/B' : 'A/B Compare';
   document.getElementById('abBar').classList.toggle('hide', !abMode);
   if (!abMode) clearAB();
 }
-function clearAB() { abA = null; abB = null; renderHooks(); document.getElementById('abSlotA').textContent = 'A — empty'; document.getElementById('abSlotB').textContent = 'B — empty'; document.getElementById('abSlotA').className = 'ab-slot'; document.getElementById('abSlotB').className = 'ab-slot'; }
+function clearAB() { abA = null; abB = null; renderHooks(); document.getElementById('abSlotA').textContent = 'A â empty'; document.getElementById('abSlotB').textContent = 'B â empty'; document.getElementById('abSlotA').className = 'ab-slot'; document.getElementById('abSlotB').className = 'ab-slot'; }
 function setAB(i) {
-  if (abA === null) { abA = i; document.getElementById('abSlotA').textContent = `A — #${i+1}`; document.getElementById('abSlotA').className = 'ab-slot a-set'; }
-  else if (abB === null && i !== abA) { abB = i; document.getElementById('abSlotB').textContent = `B — #${i+1}`; document.getElementById('abSlotB').className = 'ab-slot b-set'; }
+  if (abA === null) { abA = i; document.getElementById('abSlotA').textContent = `A â #${i+1}`; document.getElementById('abSlotA').className = 'ab-slot a-set'; }
+  else if (abB === null && i !== abA) { abB = i; document.getElementById('abSlotB').textContent = `B â #${i+1}`; document.getElementById('abSlotB').className = 'ab-slot b-set'; }
   else { clearAB(); }
   renderHooks();
 }
 
-// ─── Score badge ───────────────────────────────────────────────────────────
+// âââ Score badge âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function scoreBadge(score) {
   const col = score>=80?'#1a7a4a':score>=60?'#b5600a':'#8a8680';
   const bg  = score>=80?'#edfaf3':score>=60?'#fef3e2':'var(--bg2)';
-  const lbl = score>=80?'🔥 Viral':score>=60?'👍 Good':'📝 Okay';
+  const lbl = score>=80?'ð¥ Viral':score>=60?'ð Good':'ð Okay';
   return `<div class="sbdg"><div class="stag" style="color:${col};background:${bg}">${lbl}</div><div class="sring"><svg viewBox="0 0 36 36" style="transform:rotate(-90deg);width:34px;height:34px"><circle cx="18" cy="18" r="14" fill="none" stroke="var(--border)" stroke-width="3"/><circle cx="18" cy="18" r="14" fill="none" stroke="${col}" stroke-width="3" stroke-dasharray="${score*.879} 87.9" stroke-linecap="round"/></svg><div class="snum" style="color:${col}">${score}</div></div></div>`;
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-// ─── Render hooks ──────────────────────────────────────────────────────────
+// âââ Render hooks ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderHooks() {
   document.getElementById('hCount').textContent = allHooks.length;
   if (!allHooks.length) return;
@@ -1182,8 +1184,8 @@ function renderHooks() {
   document.getElementById('hList').innerHTML = allHooks.map((h, i) => {
     const sc = hookScores[i];
     const abClass = abMode && i===abA ? ' ab-a' : abMode && i===abB ? ' ab-b' : '';
-    const abBtn = abMode ? `<button class="bsmall" onclick="event.stopPropagation();setAB(${i})">${i===abA?'★ A':i===abB?'★ B':'Set A/B'}</button>` : '';
-    const captionBtn = `<button class="bsmall" onclick="event.stopPropagation();openCaptionFor(${i})">📱 Caption</button>`;
+    const abBtn = abMode ? `<button class="bsmall" onclick="event.stopPropagation();setAB(${i})">${i===abA?'â A':i===abB?'â B':'Set A/B'}</button>` : '';
+    const captionBtn = `<button class="bsmall" onclick="event.stopPropagation();openCaptionFor(${i})">ð± Caption</button>`;
     return `<div class="hcard${abClass}" id="hc${i}" onclick="selHook(${i})">
       <div class="htop">
         <div class="hleft"><span class="hnum">${String(i+1).padStart(2,'0')}</span><span class="htxt">${esc(h)}</span></div>
@@ -1191,8 +1193,8 @@ function renderHooks() {
       </div>
       ${sc ? `<div class="hreason">${esc(sc.reason)}</div>` : ''}
       <div class="hacts">
-        <button class="buse" onclick="event.stopPropagation();applyHook(${i})" ${SID?'':'disabled'}>▶ Use</button>
-        <button class="bsmall" onclick="event.stopPropagation();navigator.clipboard?.writeText(allHooks[${i}]||'');toast('Copied','📋')">Copy</button>
+        <button class="buse" onclick="event.stopPropagation();applyHook(${i})" ${SID?'':'disabled'}>â¶ Use</button>
+        <button class="bsmall" onclick="event.stopPropagation();navigator.clipboard?.writeText(allHooks[${i}]||'');toast('Copied','ð')">Copy</button>
         ${captionBtn}${abBtn}
       </div>
     </div>`;
@@ -1200,12 +1202,12 @@ function renderHooks() {
 }
 function selHook(i) { document.querySelectorAll('.hcard').forEach((c,j) => c.classList.toggle('sel', j===i)); }
 
-// ─── Caption modal ─────────────────────────────────────────────────────────
+// âââ Caption modal âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function openCaption() { if(!allHooks.length)return; buildCaptionSel(); openModal('captionModal'); generateCaption(); }
 function openCaptionFor(i) { buildCaptionSel(i); openModal('captionModal'); generateCaption(); }
 function buildCaptionSel(defaultIdx = 0) {
   const sel = document.getElementById('captionHookSel');
-  sel.innerHTML = allHooks.map((h,i) => `<option value="${i}" ${i===defaultIdx?'selected':''}>Hook #${i+1}: ${h.slice(0,40)}…</option>`).join('');
+  sel.innerHTML = allHooks.map((h,i) => `<option value="${i}" ${i===defaultIdx?'selected':''}>Hook #${i+1}: ${h.slice(0,40)}â¦</option>`).join('');
 }
 function generateCaption() {
   const platform = document.getElementById('captionPlatform').value;
@@ -1213,21 +1215,21 @@ function generateCaption() {
   const hook = allHooks[idx] || '';
   const niche = document.getElementById('cNiche').value.trim() || document.getElementById('niche').value;
   const tags = { tiktok:'#viral #fyp #foryoupage #trending', instagram:'#reels #viral #explore #trending', youtube:'#shorts #youtube #viral', twitter:'' };
-  const emojis = { tiktok:'🔥💯', instagram:'✨🎯', youtube:'▶️🔥', twitter:'👇' };
+  const emojis = { tiktok:'ð¥ð¯', instagram:'â¨ð¯', youtube:'â¶ï¸ð¥', twitter:'ð' };
   const captions = {
     tiktok: `${hook}\n\n${emojis.tiktok} Save this if you needed it!\n\n${tags.tiktok} #${niche.toLowerCase().replace(/\s+/g,'')}`,
     instagram: `${hook}\n\n${emojis.instagram} Double tap if this resonated!\n\nFollow for more ${niche} content\n\n${tags.instagram}`,
     youtube: `${hook}\n\n${emojis.youtube} Watch till the end!\n\n${tags.youtube}`,
-    twitter: `${hook}\n\n(thread) 👇\n\n— from your ${niche} feed`
+    twitter: `${hook}\n\n(thread) ð\n\nâ from your ${niche} feed`
   };
   document.getElementById('captionResult').textContent = captions[platform] || hook;
 }
-function copyCaption() { const t = document.getElementById('captionResult').textContent; navigator.clipboard?.writeText(t); toast('Caption copied!','📱'); closeModal('captionModal'); }
+function copyCaption() { const t = document.getElementById('captionResult').textContent; navigator.clipboard?.writeText(t); toast('Caption copied!','ð±'); closeModal('captionModal'); }
 
-// ─── Export all ZIP ────────────────────────────────────────────────────────
+// âââ Export all ZIP ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function exportAll() {
-  if (!lastResult) { toast('Generate output first','⚠️'); return; }
-  toast('Preparing ZIP…','📦');
+  if (!lastResult) { toast('Generate output first','â ï¸'); return; }
+  toast('Preparing ZIPâ¦','ð¦');
   try {
     const zip = new JSZip();
     const fetchBlob = async (url) => { const r = await fetch(url); return r.blob(); };
@@ -1241,11 +1243,11 @@ async function exportAll() {
     }
     const blob = await zip.generateAsync({type:'blob'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'autovoiceover_export.zip'; a.click();
-    toast('ZIP downloaded!','🎁');
-  } catch(e) { toast('Export failed: ' + e.message,'⚠️'); }
+    toast('ZIP downloaded!','ð');
+  } catch(e) { toast('Export failed: ' + e.message,'â ï¸'); }
 }
 
-// ─── History ───────────────────────────────────────────────────────────────
+// âââ History âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function saveToHistory(file, result) {
   const entry = {
     id: Date.now(), name: file.name, ts: new Date().toLocaleTimeString(),
@@ -1268,14 +1270,14 @@ function renderHistory() {
       <span class="hi-time">${e.ts}</span>
     </div>`).join('');
 }
-function loadHistoryItem(id) { const e = sessionHistory.find(h => h.id == id); if(!e)return; toast('Session loaded','📂'); }
+function loadHistoryItem(id) { const e = sessionHistory.find(h => h.id == id); if(!e)return; toast('Session loaded','ð'); }
 function clearHistory() { sessionHistory = []; localStorage.removeItem('avo_history'); renderHistory(); }
 renderHistory();
 
-// ─── Apply hook ────────────────────────────────────────────────────────────
+// âââ Apply hook ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function applyHook(idx) {
-  if (!SID) { toast('No session — upload first','⚠️'); return; }
-  setStat('Applying hook #'+(idx+1)+'…','act'); setPhase('ph2');
+  if (!SID) { toast('No session â upload first','â ï¸'); return; }
+  setStat('Applying hook #'+(idx+1)+'â¦','act'); setPhase('ph2');
   const fd = new FormData();
   fd.append('session_id', SID); fd.append('hook_index', String(idx));
   fd.append('voice', curVoice); fd.append('offset', String(curOffset));
@@ -1283,51 +1285,51 @@ async function applyHook(idx) {
   try {
     const res = await fetch(apiUrl('/apply-hook'), {method:'POST',body:fd});
     const data = await res.json();
-    if (!res.ok) { setStat('Error: '+(data.detail||res.status),'err'); toast(data.detail||'Error','⚠️'); return; }
+    if (!res.ok) { setStat('Error: '+(data.detail||res.status),'err'); toast(data.detail||'Error','â ï¸'); return; }
     lastResult = {...lastResult, ...data};
     const {download_url:durl, srt_url:surl, audio_preview_url:aurl} = data;
     if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
     if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
     setDls(true, durl, surl, aurl);
-    setPhase('ph5'); setStat('Done — Hook #'+(idx+1),'done');
-    toast('Hook #'+(idx+1)+' applied','✓');
+    setPhase('ph5'); setStat('Done â Hook #'+(idx+1),'done');
+    toast('Hook #'+(idx+1)+' applied','â');
     if (settings.autoplay !== false) setTimeout(() => document.getElementById('outAudio').play().catch(()=>{}), 200);
-  } catch { setStat('Network error','err'); toast('Network error','⚠️'); }
+  } catch { setStat('Network error','err'); toast('Network error','â ï¸'); }
 }
 
-// ─── Copy all hooks ────────────────────────────────────────────────────────
+// âââ Copy all hooks ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function copyAllHooks() {
   if (!allHooks.length) return;
   navigator.clipboard?.writeText(allHooks.map((h,i)=>`Hook #${i+1}: ${h}`).join('\n'));
-  toast('All hooks copied','📋');
+  toast('All hooks copied','ð');
 }
 
-// ─── Export ────────────────────────────────────────────────────────────────
+// âââ Export ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function expJSON() {
   if (!allHooks.length) return;
   const b = new Blob([JSON.stringify({hooks:allHooks,scores:hookScores},null,2)],{type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='hooks.json'; a.click();
-  toast('hooks.json downloaded','💾');
+  toast('hooks.json downloaded','ð¾');
 }
 function expCSV() {
   if (!allHooks.length) return;
   const rows = ['index,hook,score,reason',...allHooks.map((h,i)=>{const s=hookScores[i];return `${i+1},"${h.replaceAll('"','""')}",${s?.score||''},${s?.reason||''}`;})];
   const b = new Blob([rows.join('\n')],{type:'text/csv'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download='hooks.csv'; a.click();
-  toast('hooks.csv downloaded','💾');
+  toast('hooks.csv downloaded','ð¾');
 }
 
-// ─── Server health check ───────────────────────────────────────────────────
+// âââ Server health check âââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function checkHealth() {
   const dot = document.getElementById('healthDot'), txt = document.getElementById('healthText');
   const ss = document.getElementById('serverStatus');
-  dot.className = 'hdot chk'; txt.textContent = 'Checking…';
+  dot.className = 'hdot chk'; txt.textContent = 'Checkingâ¦';
   try {
     const start = Date.now();
     const res = await fetch(apiUrl('/health'), {method:'GET', signal: AbortSignal.timeout(4000)});
     const ms = Date.now() - start;
     if (res.ok) {
-      dot.className = 'hdot ok'; txt.textContent = `Online · ${ms}ms`;
+      dot.className = 'hdot ok'; txt.textContent = `Online Â· ${ms}ms`;
       ss.textContent = `server ${ms}ms`;
     } else {
       dot.className = 'hdot err'; txt.textContent = 'Error ' + res.status;
@@ -1341,15 +1343,15 @@ async function checkHealth() {
 checkHealth();
 setInterval(checkHealth, 30000);
 
-// ─── Main process ──────────────────────────────────────────────────────────
+// âââ Main process ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function processNow() {
-  if (!sf) { toast('Select a video first','⚠️'); return; }
+  if (!sf) { toast('Select a video first','â ï¸'); return; }
   const btn = document.getElementById('genBtn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-9-9"/></svg> Processing…';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-9-9"/></svg> Processingâ¦';
 
   showRes(false); setDls(false); allHooks = []; hookScores = {};
-  setStat('Uploading…','act'); setProg(0); setPhase('ph1'); setStep(3);
+  setStat('Uploadingâ¦','act'); setProg(0); setPhase('ph1'); setStep(3);
 
   const niche = document.getElementById('cNiche').value.trim().length>=2 ? document.getElementById('cNiche').value.trim() : document.getElementById('niche').value;
   const script = scriptMode === 'script' ? document.getElementById('customScript').value.trim() : '';
@@ -1370,13 +1372,13 @@ function processNow() {
     if (!e.lengthComputable) return;
     const pct = Math.round(e.loaded / e.total * 100);
     setProg(pct);
-    if (pct >= 100) { setStat('Server processing…','act'); setPhase('ph2'); document.getElementById('progBar').classList.add('ind'); }
+    if (pct >= 100) { setStat('Server processingâ¦','act'); setPhase('ph2'); document.getElementById('progBar').classList.add('ind'); }
   };
   xhr.onload = () => {
     document.getElementById('progBar').classList.remove('ind');
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
-    if (xhr.status !== 200) { setStat('Error ' + xhr.status,'err'); toast('Upload failed: '+xhr.status,'⚠️'); return; }
+    if (xhr.status !== 200) { setStat('Error ' + xhr.status,'err'); toast('Upload failed: '+xhr.status,'â ï¸'); return; }
     let data; try { data = JSON.parse(xhr.responseText); } catch { setStat('JSON parse error','err'); return; }
 
     SID = data.session_id || null;
@@ -1384,26 +1386,26 @@ function processNow() {
     const {download_url:durl, srt_url:surl, audio_preview_url:aurl, all_hooks:ah, hook_text:ht} = data;
     allHooks = ah || (ht?[ht]:[]);
 
-    setProg(100); setPhase('ph5'); setStep(4); setStat('Done ✓','done');
+    setProg(100); setPhase('ph5'); setStep(4); setStat('Done â','done');
     renderHooks(); showRes(true);
     if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
     if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
     setDls(true, durl, surl, aurl);
     saveToHistory(sf, data);
     burst();
-    toast('Output ready! Scoring hooks…','🎉');
+    toast('Output ready! Scoring hooksâ¦','ð');
     if (settings.autoplay !== false) setTimeout(() => document.getElementById('outAudio').play().catch(()=>{}), 300);
     if (allHooks.length) runScoring(allHooks, niche);
   };
   xhr.onerror = () => {
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
-    setStat('Network error','err'); toast('Network error','⚠️');
+    setStat('Network error','err'); toast('Network error','â ï¸');
   };
   xhr.send(form);
 }
 
-// ─── Reset ─────────────────────────────────────────────────────────────────
+// âââ Reset âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function resetAll() {
   sf = null; SID = null; allHooks = []; hookScores = {}; lastResult = null;
   document.getElementById('vFile').value = '';
@@ -1411,21 +1413,21 @@ function resetAll() {
   document.getElementById('dzThumb').classList.add('hide');
   document.getElementById('genBtn').disabled = true;
   document.getElementById('genBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
-  setStat('Idle — upload a video to begin'); setProg(0); clearPh();
+  setStat('Idle â upload a video to begin'); setProg(0); clearPh();
   showRes(false); setDls(false);
   const ov = document.getElementById('outVideo'); if(ov) ov.removeAttribute('src');
   const oa = document.getElementById('outAudio'); if(oa) oa.removeAttribute('src');
   audioSrc = null; isPlaying = false; stopWave();
   curOffset = 0; vidDur = 30; renderTL(); setStep(1);
-  toast('Reset','↺');
+  toast('Reset','âº');
 }
 
-// ─── BATCH ─────────────────────────────────────────────────────────────────
+// âââ BATCH âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function batchDrop(e) { e.preventDefault(); document.getElementById('bDrop').classList.remove('hl'); addBatchFiles(e.dataTransfer.files); }
 function addBatchFiles(files) {
   const items = Array.from(files).map(f => ({ id:Math.random().toString(36).slice(2), file:f, status:'queued', progress:0, result:null, thumb:URL.createObjectURL(f) }));
   batchItems = [...batchItems, ...items];
-  renderQueue(); toast(items.length + " video's added",'📹');
+  renderQueue(); toast(items.length + " video's added",'ð¹');
 }
 function removeBatchItem(id) { batchItems = batchItems.filter(i => i.id !== id); renderQueue(); }
 function clearBatch() { batchItems = []; renderQueue(); }
@@ -1445,9 +1447,9 @@ function renderQueue() {
   document.getElementById('bsErr').textContent = err;
   badge.textContent = batchItems.length; badge.classList.toggle('hide', !batchItems.length);
   runBtn.disabled = batchRunning || queued === 0;
-  runBtn.textContent = batchRunning ? 'Processing…' : `Run Batch (${queued})`;
+  runBtn.textContent = batchRunning ? 'Processingâ¦' : `Run Batch (${queued})`;
   const scolor = {queued:'#8a8680',uploading:'#1a4a8a',processing:'#b5600a',done:'#1a7a4a',error:'#c0392b'};
-  const slabel = i => ({queued:'Queued',uploading:`Uploading ${i.progress}%`,processing:'Processing…',done:'Done ✓',error:'Error'}[i.status]);
+  const slabel = i => ({queued:'Queued',uploading:`Uploading ${i.progress}%`,processing:'Processingâ¦',done:'Done â',error:'Error'}[i.status]);
   list.innerHTML = batchItems.map(item => `
     <div class="qi ${item.status}">
       <div class="qi-th">${item.thumb?`<img src="${item.thumb}" alt=""/>`:''}</div>
@@ -1464,7 +1466,7 @@ function renderQueue() {
         ${item.result.audio_preview_url?`<a class="qi-dl qi-dl-s" href="${apiUrl(bust(item.result.audio_preview_url))}" download>MP3</a>`:''}
         ${item.result.srt_url?`<a class="qi-dl qi-dl-s" href="${apiUrl(bust(item.result.srt_url))}" download>SRT</a>`:''}
       </div>`:''}
-      ${item.status==='queued'?`<button class="brm" onclick="removeBatchItem('${item.id}')">×</button>`:''}
+      ${item.status==='queued'?`<button class="brm" onclick="removeBatchItem('${item.id}')">Ã</button>`:''}
     </div>`).join('');
 }
 
@@ -1497,7 +1499,7 @@ async function runBatch() {
       xhr.send(form);
     });
   }
-  batchRunning = false; renderQueue(); burst(); toast('Batch complete!','🎉');
+  batchRunning = false; renderQueue(); burst(); toast('Batch complete!','ð');
 }
 
 renderQueue();
