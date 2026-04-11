@@ -1,0 +1,51 @@
+name: Fix HTML Encoding and Badge
+
+on:
+  workflow_dispatch:
+
+  jobs:
+    fix:
+        runs-on: ubuntu-latest
+            steps:
+                  - uses: actions/checkout@v4
+
+                        - name: Fix encoding and badge
+                                run: |
+                                          python3 - <<'EOF'
+                                                    # Step 1: Re-encode from latin-1 to utf-8 (no BOM)
+                                                              data = open('static/index.html', encoding='latin-1').read()
+                                                                        open('static/index.html', 'w', encoding='utf-8').write(data)
+
+                                                                                  # Step 2: Verify no BOM
+                                                                                            first_bytes = open('static/index.html', 'rb').read(3)
+                                                                                                      assert first_bytes != b'\xef\xbb\xbf', f"BOM found! first bytes: {first_bytes.hex()}"
+                                                                                                                print(f"No BOM confirmed. First 3 bytes: {first_bytes.hex()}")
+                                                                                                                
+                                                                                                                          # Step 3: Fix badge textContent
+                                                                                                                                    content = open('static/index.html', encoding='utf-8').read()
+                                                                                                                                              old = 'badge.textContent = batchItems.length;'
+                                                                                                                                                        new = "badge.textContent = batchItems.length || '';"
+                                                                                                                                                                  if old in content:
+                                                                                                                                                                                content = content.replace(old, new)
+                                                                                                                                                                                              open('static/index.html', 'w', encoding='utf-8').write(content)
+                                                                                                                                                                                                            print("Badge fix applied successfully.")
+                                                                                                                                                                                                                      else:
+                                                                                                                                                                                                                                    print("WARNING: badge pattern not found, checking for variant...")
+                                                                                                                                                                                                                                                  # Try without semicolon
+                                                                                                                                                                                                                                                                old2 = 'badge.textContent = batchItems.length'
+                                                                                                                                                                                                                                                                              if old2 in content:
+                                                                                                                                                                                                                                                                                                idx = content.index(old2)
+                                                                                                                                                                                                                                                                                                                  print(f"Found at index {idx}: {repr(content[idx:idx+60])}")
+                                                                                                                                                                                                                                                                                                                                else:
+                                                                                                                                                                                                                                                                                                                                                  print("badge.textContent pattern not found at all")
+                                                                                                                                                                                                                                                                                                                                                            EOF
+                                                                                                                                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                                                                                                                  - name: Commit and push
+                                                                                                                                                                                                                                                                                                                                                                          run: |
+                                                                                                                                                                                                                                                                                                                                                                                    git config user.name "github-actions[bot]"
+                                                                                                                                                                                                                                                                                                                                                                                              git config user.email "github-actions[bot]@users.noreply.github.com"
+                                                                                                                                                                                                                                                                                                                                                                                                        git add static/index.html
+                                                                                                                                                                                                                                                                                                                                                                                                                  git diff --staged --stat
+                                                                                                                                                                                                                                                                                                                                                                                                                            git commit -m "Fix: re-encode HTML to UTF-8 (no BOM), fix batch badge empty state"
+                                                                                                                                                                                                                                                                                                                                                                                                                                      git push
+                                                                                                                                                                                                                                                                                                                                                                                                                                      
