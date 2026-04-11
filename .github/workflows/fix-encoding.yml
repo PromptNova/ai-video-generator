@@ -13,20 +13,41 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Fix encoding and badge
+      - name: Fix encoding (correct approach)
         run: |
+          # First restore the original file from before the wrong fix
+          git checkout 58feb81 -- static/index.html
+          echo "Restored original file (pre-wrong-fix)"
+          
           python3 - <<'EOF'
-          # Step 1: Re-encode from latin-1 to utf-8 (no BOM)
-          data = open('static/index.html', encoding='latin-1').read()
-          open('static/index.html', 'w', encoding='utf-8').write(data)
-
-          # Step 2: Verify no BOM
+          # The original file has UTF-8 bytes stored as individual Unicode chars
+          # (e.g., em dash E2 80 94 stored as chars U+00E2, U+0080, U+0094)
+          # Fix: read as UTF-8 (gets those chars), then write each char as its 1-byte latin-1 value
+          # This restores the original UTF-8 bytes
+          
+          data = open('static/index.html', encoding='utf-8').read()
+          
+          # Verify: check that all chars are in latin-1 range (code points 0-255)
+          max_cp = max(ord(c) for c in data)
+          print(f"Max char code point: {max_cp:#x}")
+          assert max_cp <= 0xFF, f"Some chars outside latin-1 range! max={max_cp:#x}"
+          
+          # Write bytes: each char's code point becomes a byte
+          raw_bytes = data.encode('latin-1')
+          open('static/index.html', 'wb').write(raw_bytes)
+          
+          # Verify first 3 bytes are NOT BOM
           first_bytes = open('static/index.html', 'rb').read(3)
-          assert first_bytes != b'\xef\xbb\xbf', f"BOM found! first bytes: {first_bytes.hex()}"
-          print(f"No BOM confirmed. First 3 bytes: {first_bytes.hex()}")
-
-          # Step 3: Fix badge textContent
+          assert first_bytes != b'\xef\xbb\xbf', f"BOM found! {first_bytes.hex()}"
+          print(f"No BOM. First 3 bytes: {first_bytes.hex()}")
+          
+          # Verify title looks correct (should start with <!DOCTYPE)
+          start = open('static/index.html', encoding='utf-8').read(50)
+          print(f"File starts with: {repr(start[:20])}")
+          
+          # Fix badge textContent
           content = open('static/index.html', encoding='utf-8').read()
           old = 'badge.textContent = batchItems.length;'
           new = "badge.textContent = batchItems.length || '';"
@@ -34,14 +55,10 @@ jobs:
               content = content.replace(old, new)
               open('static/index.html', 'w', encoding='utf-8').write(content)
               print("Badge fix applied successfully.")
+          elif "badge.textContent = batchItems.length || '';" in content:
+              print("Badge already fixed (or was fixed in original)")
           else:
-              print("WARNING: badge pattern not found, checking for variant...")
-              old2 = 'badge.textContent = batchItems.length'
-              if old2 in content:
-                  idx = content.index(old2)
-                  print(f"Found at index {idx}: {repr(content[idx:idx+60])}")
-              else:
-                  print("badge.textContent pattern not found at all")
+              print("WARNING: badge pattern not found")
           EOF
 
       - name: Commit and push
@@ -50,5 +67,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add static/index.html
           git diff --staged --stat
-          git commit -m "Fix: re-encode HTML to UTF-8 (no BOM), fix batch badge empty state"
+          git commit -m "Fix: correct UTF-8 encoding, fix batch badge empty state"
           git push
