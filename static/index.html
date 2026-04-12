@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.h10.1/jszip.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -129,6 +129,8 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
 .vc:hover{border-color:var(--border2);color:var(--ink3);background:var(--surface)}
 .vc.sel{border-color:var(--ink);background:var(--ink);color:var(--invert-fg)}
 .vc .flag{font-size:20px;line-height:1}
+.vc-preview{background:none;border:none;cursor:pointer;font-size:10px;color:var(--muted);padding:0;opacity:.6;transition:opacity .2s}
+.vc-preview:hover{opacity:1;color:var(--ink3)}
 
 /* ─── MIX + RANGE ─── */
 .mixr{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--muted)}
@@ -543,7 +545,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
               <button class="stab" id="modeScript" onclick="setScriptMode('script')">Custom Script</button>
             </div>
             <div id="scriptArea" class="hide">
-              <textarea id="customScript" rows="4" placeholder="Type your voice-over script here. This text will be used as TTS input and overrides auto-generated hooks."></textarea>
+              <textarea id="customScript" rows="4" maxlength="1000" placeholder="Type your voice-over script here. This text will be used as TTS input and overrides auto-generated hooks."></textarea>
               <div class="char-count"><span id="charCount">0</span> / 1000 chars</div>
               <div class="script-hint">📝 When script is filled, it's used as TTS text. Hooks are still generated for A/B testing.</div>
             </div>
@@ -566,14 +568,14 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <!-- Voice chips -->
             <label class="fl">Voice Preset</label>
             <div class="vgrid" id="vChips">
-              <div class="vc sel" data-v="us_clear" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Clear</span></div>
-              <div class="vc" data-v="uk_clear" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Clear</span></div>
-              <div class="vc" data-v="au_clear" onclick="selVoice(this)"><span class="flag">🇦🇺</span><span>AU Clear</span></div>
-              <div class="vc" data-v="in_clear" onclick="selVoice(this)"><span class="flag">🇮🇳</span><span>IN Clear</span></div>
-              <div class="vc" data-v="energetic" onclick="selVoice(this)"><span class="flag">⚡</span><span>Energetic</span></div>
-              <div class="vc" data-v="calm" onclick="selVoice(this)"><span class="flag">🌊</span><span>Calm</span></div>
-              <div class="vc" data-v="us_fast" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Fast</span></div>
-              <div class="vc" data-v="uk_calm" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Calm</span></div>
+              <div class="vc sel" data-v="us_clear" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Clear</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="uk_clear" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Clear</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="au_clear" onclick="selVoice(this)"><span class="flag">🇦🇺</span><span>AU Clear</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="in_clear" onclick="selVoice(this)"><span class="flag">🇮🇳</span><span>IN Clear</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="energetic" onclick="selVoice(this)"><span class="flag">⚡</span><span>Energetic</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="calm" onclick="selVoice(this)"><span class="flag">🌊</span><span>Calm</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="us_fast" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Fast</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="uk_calm" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Calm</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
             </div>
             <input type="hidden" id="voice" value="us_clear"/>
 
@@ -964,6 +966,7 @@ function setProg(pct) { document.getElementById('progBar').style.width = pct + '
 // ─── File ──────────────────────────────────────────────────────────────────
 function handleFileInput(input) { const f = input.files?.[0]; if (f) setFile(f); }
 function setFile(file) {
+  if (file.size > 150 * 1024 * 1024) { toast('File too large — max 150MB for best results', '⚠️'); return; }
   sf = file;
   document.getElementById('genBtn').disabled = false;
   const url = URL.createObjectURL(file);
@@ -987,6 +990,15 @@ function selVoice(el) {
   document.querySelectorAll('#vChips .vc').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel'); curVoice = el.dataset.v;
 }
+// ─── Voice preview ───────────────────────────────────────────────────────────
+let _previewAudio = null;
+function previewVoice(voice) {
+  if (_previewAudio) { _previewAudio.pause(); _previewAudio = null; }
+  const a = new Audio(apiUrl('/voices/preview?voice=' + encodeURIComponent(voice)));
+  _previewAudio = a;
+  a.play().catch(() => toast('Preview unavailable', '⚠️'));
+}
+
 
 // ─── Script mode ───────────────────────────────────────────────────────────
 function setScriptMode(m) {
@@ -1282,6 +1294,8 @@ async function applyHook(idx) {
   fd.append('session_id', SID); fd.append('hook_index', String(idx));
   fd.append('voice', curVoice); fd.append('offset', String(curOffset));
   fd.append('mix', document.getElementById('mix').value);
+  fd.append('speed', document.getElementById('speed').value);
+  fd.append('pitch', document.getElementById('pitch').value);
   try {
     const res = await fetch(apiUrl('/apply-hook'), {method:'POST',body:fd});
     const data = await res.json();
