@@ -245,7 +245,8 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .dlb{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;text-decoration:none;transition:all .2s;font-family:var(--sans)}
 .dlb.dis{opacity:.3;pointer-events:none}
 .dlp{background:var(--ink);color:var(--invert-fg)}.dlp:hover{opacity:.8;transform:translateY(-1px)}
-.dls{background:var(--bg2);border:1.5px solid var(--border2);color:var(--ink3)}.dls:hover{background:var(--surface);border-color:var(--ink3);transform:translateY(-1px)}
+.dls{background:var(--bg2);border:1.5px solid var(--border2);color:var(--ink3)}
+button.dlb{cursor:pointer;font:inherit;appearance:none}.dls:hover{background:var(--surface);border-color:var(--ink3);transform:translateY(-1px)}
 
 /* ─── HISTORY PANEL ─── */
 .history-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--s1);overflow:hidden;margin-bottom:20px}
@@ -574,8 +575,8 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
               <div class="vc" data-v="in_clear" onclick="selVoice(this)"><span class="flag">🇮🇳</span><span>IN Clear</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
               <div class="vc" data-v="energetic" onclick="selVoice(this)"><span class="flag">⚡</span><span>Energetic</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
               <div class="vc" data-v="calm" onclick="selVoice(this)"><span class="flag">🌊</span><span>Calm</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
-              <div class="vc" data-v="us_fast" onclick="selVoice(this)"><span class="flag">🇺🇸</span><span>US Fast</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
-              <div class="vc" data-v="uk_calm" onclick="selVoice(this)"><span class="flag">🇬🇧</span><span>UK Calm</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="deep" onclick="selVoice(this)"><span class="flag">🔊</span><span>Deep</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
+              <div class="vc" data-v="warm" onclick="selVoice(this)"><span class="flag">☀️</span><span>Warm</span><button class="vc-preview" onclick="event.stopPropagation();previewVoice(this.closest('[data-v]').dataset.v)" title="Preview">&#9654;</button></div>
             </div>
             <input type="hidden" id="voice" value="us_clear"/>
 
@@ -703,7 +704,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <video id="outVideo" playsinline controls></video>
             <div class="vacts">
               <a id="dlVid" class="dlb dlp dis" href="#" download="autovoiceover.mp4">↓ MP4</a>
-              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">↓ SRT</a>
+              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">↓ SRT</a><button id="copySrtBtn" class="dlb dls dis" onclick="copySrtContent()" title="Copy SRT text to clipboard">⎘ Copy</button>
             </div>
           </div>
 
@@ -1112,6 +1113,7 @@ function setDls(en, mp4, srt, mp3) {
   const dv = document.getElementById('dlVid'), ds = document.getElementById('dlSrt'), da = document.getElementById('dlAud');
   if (en&&mp4){dv.href=apiUrl(bust(mp4));dv.classList.remove('dis')}else{dv.href='#';dv.classList.add('dis')}
   if (en&&srt){ds.href=apiUrl(bust(srt));ds.classList.remove('dis')}else{ds.href='#';ds.classList.add('dis')}
+  const cb=document.getElementById('copySrtBtn');if(cb){if(en&&srt){cb.classList.remove('dis')}else{cb.classList.add('dis')}}
   if (en&&mp3){da.href=apiUrl(bust(mp3));da.classList.remove('dis')}else{da.href='#';da.classList.add('dis')}
 }
 function showRes(show) {
@@ -1318,6 +1320,19 @@ function copyAllHooks() {
   toast('All hooks copied','📋');
 }
 
+// ─── Copy SRT content ────────────────────────────────────────────────────────
+async function copySrtContent() {
+  const a = document.getElementById('dlSrt');
+  if (!a || !a.href || a.href === '#' || a.href === location.href + '#') {
+    toast('No SRT available', '⚠️'); return;
+  }
+  try {
+    const text = await fetch(a.href).then(r => r.text());
+    await navigator.clipboard.writeText(text);
+    toast('SRT copied to clipboard', '✓');
+  } catch(e) { toast('Copy failed: ' + e.message, '⚠️'); }
+}
+
 // ─── Export ────────────────────────────────────────────────────────────────
 function expJSON() {
   if (!allHooks.length) return;
@@ -1405,6 +1420,7 @@ function processNow() {
     if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
     if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
     setDls(true, durl, surl, aurl);
+  if (window.innerWidth < 900) document.getElementById('resCard').scrollIntoView({ behavior: 'smooth' });
     saveToHistory(sf, data);
     burst();
     toast('Output ready! Scoring hooks…','🎉');
@@ -1517,6 +1533,9 @@ async function runBatch() {
 }
 
 renderQueue();
+
+// Keep Render server awake every 10 minutes
+setInterval(() => fetch(apiUrl('/ping')).catch(() => {}), 10 * 60 * 1000);
 </script>
 </body>
 </html>
