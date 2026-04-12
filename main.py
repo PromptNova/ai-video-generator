@@ -29,9 +29,9 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -674,3 +674,19 @@ async def list_voices():
             else "gtts"
         ),
     }
+
+
+@app.get("/voices/preview")
+async def voice_preview(voice: str = Query("us_clear")):
+    """Return a short TTS audio sample for the given voice."""
+    sample_text = "This is a sample of the selected voice. Sounds great, right?"
+    import tempfile
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        audio_path = await generate_tts(sample_text, voice, tmp_path)
+        audio_bytes = audio_path.read_bytes()
+        audio_path.unlink(missing_ok=True)
+        return Response(content=audio_bytes, media_type="audio/mpeg")
+    except Exception as e:
+        raise HTTPException(500, f"Preview failed: {e}")
