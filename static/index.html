@@ -704,8 +704,12 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <video id="outVideo" playsinline controls></video>
             <div class="vacts">
               <a id="dlVid" class="dlb dlp dis" href="#" download="autovoiceover.mp4">↓ MP4</a>
-              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">↓ SRT</a><button id="copySrtBtn" class="dlb dls dis" onclick="copySrtContent()" title="Copy SRT text to clipboard">⎘ Copy</button>
+              <a id="dlSrt" class="dlb dls dis" href="#" download="subtitles.srt">↓ SRT</a><button id="copySrtBtn" class="dlb dls dis" onclick="copySrtContent()" title="Copy SRT text to clipboard">⎘ Copy</button><button id="viewSrtBtn" class="dlb dls dis" onclick="toggleSrtViewer()" title="Preview SRT inline">👁 View</button>
             </div>
+          </div>
+          <div id="srtViewer" style="display:none;margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;max-height:220px;overflow-y:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">SRT Preview</span><button onclick="toggleSrtViewer()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;padding:2px 4px">✕</button></div>
+            <pre id="srtViewerContent" style="font-family:var(--mono);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin:0;color:var(--ink2)"></pre>
           </div>
 
           <!-- Audio + waveform -->
@@ -760,6 +764,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
             <div class="divider"></div>
             <button class="bgen" id="bRunBtn" onclick="runBatch()" disabled style="justify-content:center">Run Batch</button>
             <button onclick="clearBatch()" style="font-size:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--sans);text-align:center">Clear all</button>
+            <button id="batchZipBtn" onclick="exportBatchZip()" disabled style="font-size:12px;background:none;border:none;color:var(--accent,#2563eb);cursor:pointer;font-family:var(--sans);text-align:center;padding:0">📦 Export ZIP</button>
           </div>
         </div>
 
@@ -1114,6 +1119,7 @@ function setDls(en, mp4, srt, mp3) {
   if (en&&mp4){dv.href=apiUrl(bust(mp4));dv.classList.remove('dis')}else{dv.href='#';dv.classList.add('dis')}
   if (en&&srt){ds.href=apiUrl(bust(srt));ds.classList.remove('dis')}else{ds.href='#';ds.classList.add('dis')}
   const cb=document.getElementById('copySrtBtn');if(cb){if(en&&srt){cb.classList.remove('dis')}else{cb.classList.add('dis')}}
+  const vb=document.getElementById('viewSrtBtn');if(vb){if(en&&srt){vb.classList.remove('dis')}else{vb.classList.add('dis');const sv=document.getElementById('srtViewer');if(sv)sv.style.display='none';}}
   if (en&&mp3){da.href=apiUrl(bust(mp3));da.classList.remove('dis')}else{da.href='#';da.classList.add('dis')}
 }
 function showRes(show) {
@@ -1200,9 +1206,9 @@ function renderHooks() {
     const abClass = abMode && i===abA ? ' ab-a' : abMode && i===abB ? ' ab-b' : '';
     const abBtn = abMode ? `<button class="bsmall" onclick="event.stopPropagation();setAB(${i})">${i===abA?'★ A':i===abB?'★ B':'Set A/B'}</button>` : '';
     const captionBtn = `<button class="bsmall" onclick="event.stopPropagation();openCaptionFor(${i})">📱 Caption</button>`;
-    return `<div class="hcard${abClass}" id="hc${i}" onclick="selHook(${i})">
+    return `<div class="hcard${abClass}" id="hc${i}" onclick="selHook(${i})" draggable="true" ondragstart="hookDragStart(event,${i})" ondragover="hookDragOver(event,${i})" ondrop="hookDrop(event,${i})" ondragend="hookDragEnd()">
       <div class="htop">
-        <div class="hleft"><span class="hnum">${String(i+1).padStart(2,'0')}</span><span class="htxt">${esc(h)}</span></div>
+        <div class="hleft"><span class="hdrag" title="Drag to reorder" ondragstart="event.stopPropagation()" style="cursor:grab;color:var(--muted);opacity:.5;margin-right:5px;user-select:none;font-size:16px">⠿</span><span class="hnum">${String(i+1).padStart(2,'0')}</span><span class="htxt">${esc(h)}</span></div>
         ${sc ? scoreBadge(sc.score) : ''}
       </div>
       ${sc ? `<div class="hreason">${esc(sc.reason)}</div>` : ''}
@@ -1307,7 +1313,7 @@ async function applyHook(idx) {
     if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
     if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
     setDls(true, durl, surl, aurl);
-    setPhase('ph5'); setStat('Done — Hook #'+(idx+1),'done');
+    clearEta(); setPhase('ph5'); setStat('Done — Hook #'+(idx+1),'done');
     toast('Hook #'+(idx+1)+' applied','✓');
     if (settings.autoplay !== false) setTimeout(() => document.getElementById('outAudio').play().catch(()=>{}), 200);
   } catch { setStat('Network error','err'); toast('Network error','⚠️'); }
@@ -1401,7 +1407,7 @@ function processNow() {
     if (!e.lengthComputable) return;
     const pct = Math.round(e.loaded / e.total * 100);
     setProg(pct);
-    if (pct >= 100) { setStat('Server processing…','act'); setPhase('ph2'); document.getElementById('progBar').classList.add('ind'); }
+    if (pct >= 100) { setStat('Server processing…','act'); setEta(file); setPhase('ph2'); document.getElementById('progBar').classList.add('ind'); }
   };
   xhr.onload = () => {
     document.getElementById('progBar').classList.remove('ind');
@@ -1477,6 +1483,7 @@ function renderQueue() {
   document.getElementById('bsErr').textContent = err;
   badge.textContent = batchItems.length || ''; badge.classList.toggle('hide', !batchItems.length);
   runBtn.disabled = batchRunning || queued === 0;
+  const bzBtn = document.getElementById('batchZipBtn'); if (bzBtn) bzBtn.disabled = batchRunning || done === 0;
   runBtn.textContent = batchRunning ? 'Processing…' : `Run Batch (${queued})`;
   const scolor = {queued:'#8a8680',uploading:'#1a4a8a',processing:'#b5600a',done:'#1a7a4a',error:'#c0392b'};
   const slabel = i => ({queued:'Queued',uploading:`Uploading ${i.progress}%`,processing:'Processing…',done:'Done ✓',error:'Error'}[i.status]);
@@ -1534,8 +1541,121 @@ async function runBatch() {
 
 renderQueue();
 
-// Keep Render server awake every 10 minutes
+// Keep Render server awake every 10 minutes (browser ping while tab open)
 setInterval(() => fetch(apiUrl('/ping')).catch(() => {}), 10 * 60 * 1000);
+// NOTE: For reliable keep-alive when no browser tab is open, set up an external
+// cron job at cron-job.org to ping your KEEPALIVE_URL (set as env var on Render)
+// pointing to: https://<your-app>.onrender.com/ping  every 10 minutes.
+
+// ─── SRT Inline Viewer ──────────────────────────────────────────────────────
+let _srtViewerOpen = false;
+async function toggleSrtViewer() {
+  const panel = document.getElementById('srtViewer');
+  const content = document.getElementById('srtViewerContent');
+  const btn = document.getElementById('viewSrtBtn');
+  if (!panel) return;
+  if (_srtViewerOpen) {
+    panel.style.display = 'none';
+    _srtViewerOpen = false;
+    if (btn) btn.textContent = '👁 View';
+    return;
+  }
+  const a = document.getElementById('dlSrt');
+  if (!a || !a.href || a.href === '#' || a.href === location.href + '#') {
+    toast('No SRT available yet', '⚠️'); return;
+  }
+  try {
+    if (btn) btn.textContent = '⏳ Loading…';
+    const text = await fetch(a.href).then(r => r.text());
+    content.textContent = text;
+    panel.style.display = 'block';
+    _srtViewerOpen = true;
+    if (btn) btn.textContent = '👁 Hide';
+  } catch(e) {
+    toast('Could not load SRT: ' + e.message, '⚠️');
+    if (btn) btn.textContent = '👁 View';
+  }
+}
+
+// ─── ETA during processing ──────────────────────────────────────────────────
+let _etaTimer = null;
+function setEta(file) {
+  const statEl = document.querySelector('.stat-txt') || document.getElementById('statMsg');
+  const sizeMB = file ? file.size / 1024 / 1024 : 0;
+  const etaMsg = sizeMB < 20 ? '~30 sec' : sizeMB < 60 ? '~1 min' : '~2 min';
+  if (_etaTimer) clearInterval(_etaTimer);
+  let elapsed = 0;
+  _etaTimer = setInterval(() => {
+    elapsed += 1;
+    const remaining = sizeMB < 20 ? 30 : sizeMB < 60 ? 60 : 120;
+    const rem = Math.max(0, remaining - elapsed);
+    const txt = rem > 0 ? `Server processing… (est. ${etaMsg}, ~${rem}s left)` : 'Server processing… (almost done)';
+    setStat(txt, 'act');
+  }, 1000);
+}
+function clearEta() { if (_etaTimer) { clearInterval(_etaTimer); _etaTimer = null; } }
+
+// ─── Export Batch as ZIP ────────────────────────────────────────────────────
+async function exportBatchZip() {
+  const done = batchItems.filter(i => i.status === 'done' && i.result);
+  if (!done.length) { toast('No completed items to export', '⚠️'); return; }
+  toast('Preparing batch ZIP…', '📦');
+  try {
+    const zip = new JSZip();
+    const fetchBlob = async (url) => { const r = await fetch(url); return r.blob(); };
+    for (const item of done) {
+      const safeName = item.file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40);
+      const r = item.result;
+      if (r.download_url) { const b = await fetchBlob(apiUrl(bust(r.download_url))); zip.file(safeName + '.mp4', b); }
+      if (r.audio_preview_url) { const b = await fetchBlob(apiUrl(bust(r.audio_preview_url))); zip.file(safeName + '_voice.mp3', b); }
+      if (r.srt_url) { const b = await fetchBlob(apiUrl(bust(r.srt_url))); zip.file(safeName + '.srt', b); }
+    }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'voxshorts_batch_' + new Date().toISOString().slice(0,10) + '.zip';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Batch ZIP downloaded!', '✓');
+  } catch(e) { toast('ZIP failed: ' + e.message, '⚠️'); }
+}
+
+// ─── Hook Drag-to-Reorder ────────────────────────────────────────────────────
+let _dragSrcIdx = null;
+function hookDragStart(e, idx) {
+  _dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.style.opacity = '0.5';
+}
+function hookDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // Highlight drop target
+  document.querySelectorAll('.hcard').forEach((el, i) => {
+    el.style.outline = (i === idx && i !== _dragSrcIdx) ? '2px dashed var(--accent,#2563eb)' : '';
+  });
+}
+function hookDrop(e, idx) {
+  e.preventDefault();
+  if (_dragSrcIdx === null || _dragSrcIdx === idx) return;
+  // Reorder allHooks and hookScores arrays
+  const hookMoved = allHooks.splice(_dragSrcIdx, 1)[0];
+  allHooks.splice(idx, 0, hookMoved);
+  if (hookScores && hookScores.length) {
+    const scoreMoved = hookScores.splice(_dragSrcIdx, 1)[0];
+    hookScores.splice(idx, 0, scoreMoved);
+  }
+  renderHooks();
+  toast('Hook reordered', '↕️');
+}
+function hookDragEnd() {
+  _dragSrcIdx = null;
+  document.querySelectorAll('.hcard').forEach(el => {
+    el.style.opacity = '';
+    el.style.outline = '';
+  });
+}
+
 </script>
 </body>
 </html>
