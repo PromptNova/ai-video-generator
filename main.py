@@ -40,6 +40,10 @@ log = logging.getLogger("voxshorts")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 ELEVENLABS_KEY    = os.getenv("ELEVENLABS_API_KEY", "")
+# External keep-alive URL (set on Render + cron-job.org to prevent sleep):
+# 1. Add env var KEEPALIVE_URL = https://<your-app>.onrender.com/ping in Render dashboard
+# 2. On cron-job.org: create a cron every 10 min, URL = value of KEEPALIVE_URL
+KEEPALIVE_URL     = os.getenv("KEEPALIVE_URL", "")
 
 SESSIONS_DIR = Path("sessions")
 STATIC_DIR   = Path("static")
@@ -82,6 +86,10 @@ NICHE_PROMPTS = {
 }
 
 app = FastAPI(title="VoxShorts API", version="2.0.0")
+if KEEPALIVE_URL:
+    log.info(f"External keep-alive configured: {KEEPALIVE_URL}")
+else:
+    log.warning("KEEPALIVE_URL not set — server may sleep on Render free tier when no tab is open")
 
 app.add_middleware(
     CORSMiddleware,
