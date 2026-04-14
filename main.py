@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -629,6 +629,53 @@ async def translate(
     if not text.strip():
         raise HTTPException(400, "Empty text provided")
     return {"translated": await translate_text(text, target), "target": target}
+
+
+@app.post("/score-hooks")
+async def score_hooks_endpoint(request: Request):
+    """Score hooks server-side — keeps Anthropic API key secret from browser."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(400, "Invalid JSON body")
+    hooks = body.get("hooks", [])
+    niche = body.get("niche", "general")
+    if not hooks or not isinstance(hooks, list):
+        raise HTTPException(400, "hooks must be a non-empty list")
+    scores = await score_hooks(hooks[:20], niche)  # cap at 20 for safety
+    result = []
+    for i, s in enumerate(scores):
+        if isinstance(s, dict):
+            result.append({"index": i, "score": s.get("score", 70), "reason": s.get("reason", "")})
+        else:
+            result.append({"index": i, "score": 70, "reason": ""})
+    return {"scores": result}
+
+
+@app.post("/generate-hooks")
+async def generate_hooks_endpoint(request: Request):
+    """Re-generate hooks for an existing session without re-uploading the video."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(400, "Invalid JSON body")
+    session_id = body.get("session_id")
+    niche = body.get("niche", "general")
+    if not session_id:
+        raise HTTPException(400, "session_id is required")
+    session = sessions.get(session_id)
+    if not session:
+        raise HTTPException(404, f"Session '{session_id}' not found or expired")
+    video_description = session.get("description", "short-form video")
+    script = session.get("script")
+    try:
+        hooks = await generate_hooks(video_description, niche, script)
+    except Exception as e:
+        log.error(f"generate-hooks error: {e}")
+        raise HTTPException(500, f"Hook generation failed: {e}")
+    session["hooks"] = hooks
+    session["niche"] = niche
+    return {"hooks": hooks, "session_id": session_id}
 
 
 @app.get("/sessions/{session_id}")
