@@ -426,6 +426,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
       <div class="sk"><span class="sk-lbl">Open settings</span><span class="sk-key">S</span></div>
       <div class="sk"><span class="sk-lbl">Copy all hooks</span><span class="sk-key">C</span></div>
       <div class="sk"><span class="sk-lbl">Export all (ZIP)</span><span class="sk-key">E</span></div>
+      <div class="sk"><span class="sk-lbl">A/B Compare toggle</span><span class="sk-key">A</span></div>
     </div>
   </div>
 </div>
@@ -678,7 +679,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
                 <button class="bt" id="copyAllBtn" onclick="copyAllHooks()" disabled>Copy all</button>
                 <button class="bt" id="abBtn" onclick="toggleABMode()">A/B Compare</button>
                 <button class="bt" id="captionBtn" onclick="openCaption()" disabled>📱 Caption</button>
-                <button class="bt" id="rescoreBtn" onclick="rescoreHooks()" disabled>Re-score</button>
+                <button class="bt" id="newHooksBtn" onclick="regenerateHooks()" disabled title="Generate fresh hooks without re-uploading">↺ New Hooks</button><button class="bt" id="rescoreBtn" onclick="rescoreHooks()" disabled>Re-score</button>
                 <button class="bt" id="expJson" onclick="expJSON()" disabled>JSON</button>
                 <button class="bt" id="expCsv" onclick="expCSV()" disabled>CSV</button>
               </div>
@@ -937,6 +938,7 @@ document.addEventListener('keydown', e => {
     case 's': openModal('settingsModal'); break;
     case 'c': if (!e.ctrlKey && !e.metaKey) copyAllHooks(); break;
     case 'e': if (!e.ctrlKey && !e.metaKey) exportAll(); break;
+    case 'a': if (!e.ctrlKey && !e.metaKey) toggleABMode(); break;
     case '?': openShortcuts(); break;
   }
 });
@@ -1131,19 +1133,18 @@ function showRes(show) {
 
 // ─── Hook scoring ──────────────────────────────────────────────────────────
 async function scoreHooksAPI(hooks, niche) {
+  // Security fix: scoring done server-side — API key never exposed to browser
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1000,
-        messages:[{role:'user',content:`You are a viral content expert. Score each hook for the "${niche}" niche (0-100). Consider: curiosity gap, urgency, specificity, emotional pull.\n\nReturn ONLY valid JSON:\n{"scores":[{"index":0,"score":85,"reason":"Strong curiosity gap"}]}\n\nHooks:\n${hooks.map((h,i)=>`${i}: "${h}"`).join('\n')}`}]
-      })
+    const res = await fetch(apiUrl('/score-hooks'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({hooks, niche})
     });
+    if (!res.ok) throw new Error('score-hooks ' + res.status);
     const d = await res.json();
-    const txt = (d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
-    return JSON.parse(txt).scores;
+    return d.scores;
   } catch {
-    return hooks.map((_,i) => ({index:i, score:60+Math.floor(Math.random()*30), reason:'Based on niche analysis'}));
+    return hooks.map((_, i) => ({index: i, score: 60 + Math.floor(Math.random() * 30), reason: 'Based on niche analysis'}));
   }
 }
 
@@ -1198,6 +1199,7 @@ function renderHooks() {
   document.getElementById('copyAllBtn').disabled = !en;
   document.getElementById('captionBtn').disabled = !en;
   document.getElementById('rescoreBtn').disabled = !en;
+  const nhb = document.getElementById('newHooksBtn'); if (nhb) nhb.disabled = !en || !SID;
   document.getElementById('expJson').disabled = !en;
   document.getElementById('expCsv').disabled = !en;
 
@@ -1654,6 +1656,34 @@ function hookDragEnd() {
     el.style.opacity = '';
     el.style.outline = '';
   });
+}
+
+
+// ─── Regenerate hooks server-side (no re-upload needed) ─────────────────────
+async function regenerateHooks() {
+  if (!SID) { toast('No active session — upload a video first', '⚠️'); return; }
+  const niche = document.getElementById('niche').value || 'general';
+  const nhb = document.getElementById('newHooksBtn');
+  if (nhb) { nhb.disabled = true; nhb.textContent = '⏳ …'; }
+  toast('Generating new hooks…', '🧠');
+  try {
+    const res = await fetch(apiUrl('/generate-hooks'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session_id: SID, niche})
+    });
+    if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail || res.status); }
+    const data = await res.json();
+    allHooks = data.hooks || [];
+    hookScores = {};
+    renderHooks();
+    toast('New hooks ready!', '🎣');
+    if (allHooks.length) runScoring(allHooks, niche);
+  } catch(e) {
+    toast('Failed: ' + e.message, '⚠️');
+  } finally {
+    if (nhb) { nhb.disabled = !SID; nhb.textContent = '↺ New Hooks'; }
+  }
 }
 
 </script>
