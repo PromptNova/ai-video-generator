@@ -398,10 +398,9 @@ async def score_hooks(hooks: list[str], niche: str) -> list[dict]:
     if not hooks:
         return []
     prompt = (
-        f"Score these {len(hooks)} hooks for a {niche} video.\n\n"
-        f"Hooks:\n{json.dumps(hooks)}\n\n"
-        f"Return ONLY a JSON array of {len(hooks)} objects each with: "
-        f"score (1-100), reason (string), tags (array of strings)."
+        f'Score these {len(hooks)} hooks for "{niche}" niche (0-100). '
+        f'Return ONLY JSON: {{"scores":[{{"index":0,"score":85,"reason":"short reason"}}]}}. '
+        f'Hooks:\n' + '\n'.join(f'{i}: "{h}"' for i, h in enumerate(hooks))
     )
     try:
         if ANTHROPIC_API_KEY:
@@ -415,7 +414,7 @@ async def score_hooks(hooks: list[str], niche: str) -> list[dict]:
                     },
                     json={
                         "model": "claude-haiku-4-5-20251001",
-                        "max_tokens": 1024,
+                        "max_tokens": 300,
                         "messages": [{"role": "user", "content": prompt}],
                     },
                 )
