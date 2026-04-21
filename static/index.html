@@ -474,7 +474,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
         <button class="tbb" id="tabBatch" onclick="switchTab('batch')">Batch <span id="batchBadge" class="hide" style="margin-left:3px;opacity:.7;font-size:10px"></span></button>
       </div>
       <div class="hright">
-        <div class="health"><div class="hdot" id="healthDot"></div><span id="healthText">Checking…</span></div>
+        <div class="health"><div class="hdot" id="healthDot"></div><span id="healthText">Checking…</span></div><span id="genCount" style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-left:10px"></span>
         <button class="hbtn" onclick="openModal('settingsModal')">⚙️ Settings</button>
         <button class="hbtn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
         <button class="hbtn hide-sm" onclick="exportAll()" id="exportAllBtn" title="Export all (E)">↓ Export All</button>
@@ -639,7 +639,7 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
 
             <div class="pcard">
               <div class="pr">
-                <span class="ps" id="statTxt">Idle — upload a video to begin</span>
+                <span class="ps" id="statTxt">Idle — upload a video to begin</span><button class="bghost" id="retryBtn" onclick="processNow()" style="display:none;margin-top:8px;width:100%;font-size:12px">↺ Try Again</button>
                 <span class="ppct" id="progPct">0%</span>
               </div>
               <div class="pt"><div class="pf" id="progBar"></div></div>
@@ -897,7 +897,7 @@ function toggleTheme() {
   settings.theme = t; saveSettingsLocal();
   toast('Theme changed', t === 'dark' ? '🌙' : '☀️');
 }
-applyTheme(settings.theme || 'light');
+applyTheme(settings.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).classList.add('show'); }
@@ -982,7 +982,7 @@ function setFile(file) {
   t.onloadedmetadata = () => { vidDur = t.duration || 30; renderTL(); };
   document.getElementById('dzContent').classList.add('hide');
   document.getElementById('dzThumb').classList.remove('hide');
-  document.getElementById('tName').textContent = file.name.length > 30 ? file.name.slice(0,27)+'…' : file.name;
+  document.getElementById('tName').textContent = file.name.length > 30 ? file.name.slice(0,10)+'…' : file.name;
   document.getElementById('tSize').textContent = (file.size/1024/1024).toFixed(1) + ' MB';
   setStep(2); toast('Video selected', '📹');
 }
@@ -1415,8 +1415,8 @@ function processNow() {
     document.getElementById('progBar').classList.remove('ind');
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
-    if (xhr.status !== 200) { setStat('Error ' + xhr.status,'err'); toast('Upload failed: '+xhr.status,'⚠️'); return; }
-    let data; try { data = JSON.parse(xhr.responseText); } catch { setStat('JSON parse error','err'); return; }
+    if (xhr.status !== 200) { setStat('Error ' + xhr.status,'err'); toast('Upload failed: '+xhr.status,'⚠️'); document.getElementById('retryBtn').style.display='block'; return; }
+    let data; try { data = JSON.parse(xhr.responseText); } catch { setStat('JSON parse error','err'); document.getElementById('retryBtn').style.display='block'; return; }
 
     SID = data.session_id || null;
     lastResult = data;
@@ -1424,7 +1424,7 @@ function processNow() {
     allHooks = ah || (ht?[ht]:[]);
 
     setProg(100); setPhase('ph5'); setStep(4); setStat('Done ✓','done');
-    renderHooks(); showRes(true);
+    renderHooks(); showRes(true); document.getElementById('retryBtn').style.display='none'; (function(){ var n=(parseInt(localStorage.getItem('avo_total_generated')||'0')+1); localStorage.setItem('avo_total_generated',String(n)); var el=document.getElementById('genCount'); if(el) el.textContent=n+' generated'; })();
     if (durl) document.getElementById('outVideo').src = apiUrl(bust(durl));
     if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
     setDls(true, durl, surl, aurl);
@@ -1438,7 +1438,7 @@ function processNow() {
   xhr.onerror = () => {
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
-    setStat('Network error','err'); toast('Network error','⚠️');
+    setStat('Network error','err'); toast('Network error','⚠️'); document.getElementById('retryBtn').style.display='block';
   };
   xhr.send(form);
 }
@@ -1451,7 +1451,7 @@ function resetAll() {
   document.getElementById('dzThumb').classList.add('hide');
   document.getElementById('genBtn').disabled = true;
   document.getElementById('genBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
-  setStat('Idle — upload a video to begin'); setProg(0); clearPh();
+  setStat('Idle — upload a video to begin'); document.getElementById('retryBtn').style.display='none'; setProg(0); clearPh();
   showRes(false); setDls(false);
   const ov = document.getElementById('outVideo'); if(ov) ov.removeAttribute('src');
   const oa = document.getElementById('outAudio'); if(oa) oa.removeAttribute('src');
@@ -1687,5 +1687,10 @@ async function regenerateHooks() {
 }
 
 </script>
+
+<!-- Onboarding -->
+<div id="avo_onboard" style="display:none;position:fixed;inset:0;z-index:9999;pointer-events:none"><div id="avo_ob_bg" style="position:absolute;inset:0;background:rgba(0,0,0,.55);pointer-events:all"></div><div id="avo_ob_box" style="position:absolute;background:#111;color:#fff;border-radius:12px;padding:18px 20px;max-width:280px;font-size:13px;line-height:1.5;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,.6)"><div id="avo_ob_txt" style="margin-bottom:14px;font-weight:500"></div><div style="display:flex;justify-content:space-between;align-items:center"><span id="avo_ob_n" style="font-size:11px;opacity:.5"></span><button onclick="avoNext()" style="background:#fff;color:#000;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer" id="avo_ob_btn">Next →</button></div></div></div>
+<script>(function(){if(localStorage.getItem('avo_onboarded'))return;var steps=[{t:'Upload your video here 📥',s:'#dzContent'},{ t:'Pick a voice style 🎤',s:'.vc'},{ t:'Click to get your short + 7 hooks ✨',s:'#genBtn'}];var i=0;window.avoNext=function(){i++;if(i>=steps.length){localStorage.setItem('avo_onboarded','1');document.getElementById('avo_onboard').style.display='none';return;}if(i===steps.length-1)document.getElementById('avo_ob_btn').textContent='Got it ✓';show(i);};function show(idx){var s=steps[idx];document.getElementById('avo_ob_txt').textContent=s.t;document.getElementById('avo_ob_n').textContent=(idx+1)+' / '+steps.length;var el=document.querySelector(s.s);var box=document.getElementById('avo_ob_box');if(el){var r=el.getBoundingClientRect();box.style.top=Math.min(r.bottom+14,window.innerHeight-180)+'px';box.style.left=Math.max(10,Math.min(r.left,window.innerWidth-300))+'px';}else{box.style.top='50%';box.style.left='50%';box.style.transform='translate(-50%,-50%)';}}document.getElementById('avo_onboard').style.display='block';show(0);})();</script>
+<script>var _gcEl=document.getElementById('genCount'); if(_gcEl){var _gn=parseInt(localStorage.getItem('avo_total_generated')||'0');if(_gn>0)_gcEl.textContent=_gn+' generated';}</script>
 </body>
 </html>
