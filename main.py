@@ -72,6 +72,28 @@ OPENAI_VOICES = {
     "us_fast": "alloy", "uk_calm": "echo",
 }
 
+PREVIEW_TEXTS = {
+    'us_clear':  "Hey, ready to go viral? Upload your clip and let's make it happen.",
+    'uk_clear':  "Rather good, isn't it? Let me show you what VoxShorts can do.",
+    'au_clear':  "G'day! Drop your video in and we'll turn it into a banger.",
+    'in_clear':  "Welcome! Let's create something amazing together today.",
+    'energetic': "LET'S GO! Your next viral video starts RIGHT NOW!",
+    'calm':      "Take a breath. Upload your video, and we'll handle everything else.",
+    'deep':      "Welcome to VoxShorts. Your content, elevated.",
+    'warm':      "Hi there! So glad you're here. Let's make something great.",
+}
+
+VOICE_CONFIG = {
+    'us_clear':  {'lang': 'en', 'tld': 'com',    'slow': False},
+    'uk_clear':  {'lang': 'en', 'tld': 'co.uk',  'slow': False},
+    'au_clear':  {'lang': 'en', 'tld': 'com.au', 'slow': False},
+    'in_clear':  {'lang': 'en', 'tld': 'co.in',  'slow': False},
+    'energetic': {'lang': 'en', 'tld': 'com',    'slow': False},
+    'calm':      {'lang': 'en', 'tld': 'co.uk',  'slow': True},
+    'deep':      {'lang': 'en', 'tld': 'com.au', 'slow': True},
+    'warm':      {'lang': 'en', 'tld': 'co.in',  'slow': False},
+}
+
 NICHE_PROMPTS = {
     "general":    "engaging, broad audience",
     "business":   "professional, ROI-focused, executive audience",
@@ -209,7 +231,8 @@ async def generate_tts(
     try:
         from gtts import gTTS
         import io
-        tts = gTTS(text=text, lang="en", slow=(voice == "calm"))
+        cfg = VOICE_CONFIG.get(voice, VOICE_CONFIG['us_clear'])
+        tts = gTTS(text=text, lang=cfg['lang'], tld=cfg['tld'], slow=cfg['slow'])
         buf = io.BytesIO()
         tts.write_to_fp(buf)
         output_path.write_bytes(buf.getvalue())
@@ -733,13 +756,20 @@ async def list_voices():
 @app.get("/voices/preview")
 async def voice_preview(voice: str = Query("us_clear")):
     """Return a short TTS audio sample for the given voice."""
-    sample_text = "This is a sample of the selected voice. Sounds great, right?"
+    # Use cached preview if available
+    cached_path = SESSIONS_DIR / f"preview_{voice}.mp3"
+    if cached_path.exists():
+        return Response(content=cached_path.read_bytes(), media_type="audio/mpeg")
+
+    sample_text = PREVIEW_TEXTS.get(voice, PREVIEW_TEXTS['us_clear'])
     import tempfile
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
             tmp_path = Path(tmp.name)
         audio_path = await generate_tts(sample_text, voice, tmp_path)
         audio_bytes = audio_path.read_bytes()
+        # Cache for future requests
+        cached_path.write_bytes(audio_bytes)
         audio_path.unlink(missing_ok=True)
         return Response(content=audio_bytes, media_type="audio/mpeg")
     except Exception as e:
