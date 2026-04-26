@@ -537,6 +537,23 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
           </div>
         </div>
 
+        <!-- Quick Hooks Preview -->
+        <div class="card" id="quickHooksCard" style="display:none">
+          <div class="ch">
+            <div class="ct">✨ Quick Hooks Preview</div>
+            <div class="csub">Generate 7 viral hooks instantly — pick your best before the full render</div>
+          </div>
+          <div class="cb">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button class="bgen" id="quickHooksBtn" onclick="runQuickHooks()" style="flex:1;min-width:140px;font-size:13px">
+                ✨ Generate Hooks First <span style="opacity:.6;font-size:11px">(~2 sec)</span>
+              </button>
+              <span id="quickHooksStat" style="font-size:12px;font-family:var(--mono);color:var(--muted)"></span>
+            </div>
+            <div id="quickHooksList" style="margin-top:14px;display:none;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+
         <!-- Config -->
         <div class="card">
           <div class="ch"><div class="ct">Configuration</div><div class="csub">Voice, niche, script &amp; audio settings</div></div>
@@ -567,6 +584,10 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:32px
               </div>
             </div>
 
+            <div id="recentNichesRow" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:.04em;flex-shrink:0">Recent:</span>
+              <div id="recentNicheChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
             <div class="divider"></div>
 
             <!-- Voice chips -->
@@ -1000,7 +1021,9 @@ function setFile(file) {
   document.getElementById('dzThumb').classList.remove('hide');
   document.getElementById('tName').textContent = file.name.length > 30 ? file.name.slice(0,10)+'…' : file.name;
   document.getElementById('tSize').textContent = (file.size/1024/1024).toFixed(1) + ' MB';
-  setStep(2); toast('Video selected', '📹');
+  setStep(2);
+  document.getElementById('quickHooksCard').style.display = '';
+  toast('Video selected', '📹');
 }
 const dz = document.getElementById('dropZone');
 dz.addEventListener('click', () => document.getElementById('vFile').click());
@@ -1432,10 +1455,10 @@ function processNow() {
     if (!e.lengthComputable) return;
     const pct = Math.round(e.loaded / e.total * 100);
     setProg(pct);
-    if (pct >= 100) { setStat('Server processing…','act'); setEta(file); setPhase('ph2'); document.getElementById('progBar').classList.add('ind'); }
+    if (pct >= 100) { setStat('Server processing…','act'); setEta(sf); setPhase('ph2'); startStatusRotation(); document.getElementById('progBar').classList.add('ind'); }
   };
   xhr.onload = () => {
-    document.getElementById('progBar').classList.remove('ind');
+    document.getElementById('progBar').classList.remove('ind'); stopStatusRotation();
     btn.disabled = false;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
     if (xhr.status !== 200) { setStat('Error ' + xhr.status,'err'); toast('Upload failed: '+xhr.status,'⚠️'); document.getElementById('retryBtn').style.display='block'; return; }
@@ -1452,6 +1475,7 @@ function processNow() {
     if (aurl) { document.getElementById('outAudio').src = apiUrl(bust(aurl)); audioSrc = null; }
     setDls(true, durl, surl, aurl);
   if (window.innerWidth < 900) document.getElementById('resCard').scrollIntoView({ behavior: 'smooth' });
+    saveRecentNiche(niche);
     saveToHistory(sf, data);
     burst();
     toast('Output ready! Scoring hooks…','🎉');
@@ -1459,7 +1483,7 @@ function processNow() {
     if (allHooks.length) runScoring(allHooks, niche);
   };
   xhr.onerror = () => {
-    btn.disabled = false;
+    btn.disabled = false; stopStatusRotation();
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg> Generate <span style="opacity:.6;font-size:11px;margin-left:2px">[G]</span>';
     setStat('Network error','err'); toast('Network error','⚠️'); document.getElementById('retryBtn').style.display='block';
   };
@@ -1469,6 +1493,8 @@ function processNow() {
 // ─── Reset ─────────────────────────────────────────────────────────────────
 function resetAll() {
   const _sb = document.getElementById('genStatBar'); if (_sb) _sb.remove();
+  const _qhc = document.getElementById('quickHooksCard'); if (_qhc) _qhc.style.display = 'none';
+  const _qhl = document.getElementById('quickHooksList'); if (_qhl) { _qhl.style.display = 'none'; _qhl.innerHTML = ''; }
   sf = null; SID = null; allHooks = []; hookScores = {}; lastResult = null;
   document.getElementById('vFile').value = '';
   document.getElementById('dzContent').classList.remove('hide');
@@ -1603,6 +1629,28 @@ async function toggleSrtViewer() {
   }
 }
 
+// ─── Processing status rotation ────────────────────────────────────────
+const STATUS_MSGS = [
+  'Analyzing your video…',
+  'Writing viral hooks…',
+  'Generating voice-over…',
+  'Merging audio…',
+  'Almost done…'
+];
+let _statusRot = null, _statusIdx = 0;
+function startStatusRotation() {
+  stopStatusRotation();
+  _statusIdx = 0;
+  setStat(STATUS_MSGS[0], 'act');
+  _statusRot = setInterval(() => {
+    _statusIdx = (_statusIdx + 1) % STATUS_MSGS.length;
+    setStat(STATUS_MSGS[_statusIdx], 'act');
+  }, 3000);
+}
+function stopStatusRotation() {
+  if (_statusRot) { clearInterval(_statusRot); _statusRot = null; }
+}
+
 // ─── ETA during processing ──────────────────────────────────────────────────
 let _etaTimer = null;
 function setEta(file) {
@@ -1719,6 +1767,80 @@ function shareResult() {
     const btn = document.getElementById('shareBtn');
     if (btn) { const orig = btn.textContent; btn.textContent = '✓ Copied!'; btn.style.color = 'var(--green)'; setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500); }
   }).catch(() => toast('Copy failed', '⚠️'));
+}
+
+// ─── Recent Niches ─────────────────────────────────────────────────────────────
+function saveRecentNiche(niche) {
+  if (!niche || niche.toLowerCase() === 'general') return;
+  let recent = JSON.parse(localStorage.getItem('avo_recent_niches') || '[]');
+  recent = [niche, ...recent.filter(n => n.toLowerCase() !== niche.toLowerCase())].slice(0, 5);
+  localStorage.setItem('avo_recent_niches', JSON.stringify(recent));
+  renderRecentNiches();
+}
+function renderRecentNiches() {
+  const recent = JSON.parse(localStorage.getItem('avo_recent_niches') || '[]');
+  const row = document.getElementById('recentNichesRow');
+  const chips = document.getElementById('recentNicheChips');
+  if (!row || !chips || !recent.length) { if (row) row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  chips.innerHTML = recent.map(n =>
+    '<button class="fmt" style="cursor:pointer;background:var(--surface);color:var(--ink3);border:1px solid var(--border2);font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:999px;transition:all .15s" onclick="pickRecentNiche(\'' + n.replace(/'/g, "\\'") + '\')">' + esc(n) + '</button>'
+  ).join('');
+}
+function pickRecentNiche(n) {
+  const input = document.getElementById('cNiche');
+  if (input) { input.value = n; input.dispatchEvent(new Event('input')); }
+  toast('Niche set: ' + n, '🎯');
+}
+renderRecentNiches();
+
+// ─── Quick Hooks Preview ─────────────────────────────────────────────
+async function runQuickHooks() {
+  const btn = document.getElementById('quickHooksBtn');
+  const stat = document.getElementById('quickHooksStat');
+  const list = document.getElementById('quickHooksList');
+  if (!btn || !list) return;
+  const niche = document.getElementById('cNiche').value.trim() ||
+                document.getElementById('niche').value || 'general';
+  btn.disabled = true;
+  stat.textContent = '⏳ Generating…';
+  list.style.display = 'none';
+  try {
+    const res = await fetch(apiUrl('/generate-hooks'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({niche, session_id: SID || undefined})
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const hooks = data.hooks || [];
+    stat.textContent = hooks.length + ' hooks ready';
+    list.innerHTML = hooks.map((h, i) => {
+      const num = String(i+1).padStart(2,'0');
+      const hEsc = esc(h);
+      const hAttr = h.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      return '<div style="padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);display:flex;align-items:flex-start;gap:10px">'
+        + '<span style="font-family:var(--mono);font-size:10px;color:var(--muted2);flex-shrink:0;padding-top:2px">' + num + '</span>'
+        + '<span style="font-size:13px;color:var(--ink2);flex:1;line-height:1.5">' + hEsc + '</span>'
+        + '<button onclick="useQuickHook(this.dataset.h)" data-h="' + hAttr + '" style="flex-shrink:0;font-size:11px;font-weight:700;background:var(--ink);color:var(--invert-fg);border:none;border-radius:999px;padding:4px 12px;cursor:pointer;white-space:nowrap;font-family:var(--sans)">Use this →</button>'
+        + '</div>';
+    }).join('');
+    list.style.display = 'flex';
+    list.style.flexDirection = 'column';
+    toast('Hooks preview ready!', '✨');
+  } catch(e) {
+    stat.textContent = 'Failed: ' + e.message;
+    toast('Hook preview failed: ' + e.message, '⚠️');
+  } finally {
+    btn.disabled = false;
+  }
+}
+function useQuickHook(text) {
+  setScriptMode('script');
+  const ta = document.getElementById('customScript');
+  if (ta) { ta.value = text; ta.dispatchEvent(new Event('input')); }
+  document.getElementById('quickHooksCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  toast('Hook pre-filled in Custom Script — click Generate!', '✔');
 }
 
 // ─── Niche Suggestions Dropdown ───────────────────────────────────────────
