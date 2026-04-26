@@ -186,7 +186,7 @@ async def generate_tts(
     text: str, voice: str, output_path: Path,
     speed: float = 1.0, pitch: float = 0
 ) -> Path:
-    if ELEVENLABS_KEY:
+    if os.getenv('ELEVENLABS_API_KEY'):
         try:
             voice_id   = ELEVENLABS_VOICES.get(voice, ELEVENLABS_VOICES["us_clear"])
             stability  = 0.5
@@ -194,7 +194,7 @@ async def generate_tts(
             if voice == "energetic": stability = 0.35; similarity = 0.8
             elif voice == "calm":    stability = 0.75; similarity = 0.7
             elif voice == "deep":    stability = 0.8;  similarity = 0.85
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 r = await client.post(
                     f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
                     headers={"xi-api-key": ELEVENLABS_KEY, "Accept": "audio/mpeg"},
@@ -540,27 +540,33 @@ async def upload(
     with open(video_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    hooks = await generate_hooks(
-        f"A {niche} video '{file.filename}'"
-        + (f" with script: {script[:200]}" if script else ""),
-        niche, script,
-    )
-    vo_text = script if script else hooks[0]
-
-    if target_lang and target_lang not in ("nl", "en", ""):
-        try:
-            vo_text = await translate_text(vo_text, target_lang)
-        except:
-            pass
-
-    audio_path = session_dir / "voiceover.mp3"
-    await generate_tts(vo_text, voice, audio_path, speed=speed, pitch=pitch)
-
-    result_path = await process_video(
-        video_path, audio_path, session_dir / "output.mp4",
-        offset=offset, mix=mix_float, fade_in=fade_in, fade_out=fade_out,
-    )
-    has_video = result_path.suffix == ".mp4"
+    async def _process():
+        _hooks = await generate_hooks(
+            f"A {niche} video '{file.filename}'"
+            + (f" with script: {script[:200]}" if script else ""),
+            niche, script,
+        )
+        _vo_text = script if script else _hooks[0]
+        if target_lang and target_lang not in ("nl", "en", ""):
+            try:
+                _vo_text = await translate_text(_vo_text, target_lang)
+            except:
+                pass
+        _audio_path = session_dir / "voiceover.mp3"
+        await generate_tts(_vo_text, voice, _audio_path, speed=speed, pitch=pitch)
+        _result_path = await process_video(
+            video_path, _audio_path,
+            session_dir / "output.mp4",
+            offset=offset, mix=mix_float,
+            fade_in=fade_in, fade_out=fade_out,
+        )
+        return _hooks, _vo_text, _audio_path, _result_path
+    try:
+        hooks, vo_text, audio_path, result_path = await asyncio.wait_for(_process(), timeout=90)
+    except asyncio.TimeoutError:
+        shutil.rmtree(session_dir, ignore_errors=True)
+        raise HTTPException(504, "Processing timed out — try a shorter clip")
+        has_video = result_path.suffix == ".mp4"
 
     srt_path = session_dir / "subtitles.srt"
     srt_path.write_text(generate_srt(vo_text), encoding="utf-8")
@@ -676,27 +682,40 @@ async def score_hooks_endpoint(request: Request):
 
 @app.post("/generate-hooks")
 async def generate_hooks_endpoint(request: Request):
-    """Re-generate hooks for an existing session without re-uploading the video."""
+    """Generate hooks — works with or without an existing session.
+    Body: {niche?, custom_niche?, script?, session_id?}
+    session_id is optional; if omitted, hooks are generated from niche context alone.
+    """
     try:
         body = await request.json()
     except Exception:
         raise HTTPException(400, "Invalid JSON body")
     session_id = body.get("session_id")
-    niche = body.get("niche", "general")
-    if not session_id:
-        raise HTTPException(400, "session_id is required")
-    session = sessions.get(session_id)
-    if not session:
-        raise HTTPException(404, f"Session '{session_id}' not found or expired")
-    video_description = session.get("description", "short-form video")
-    script = session.get("script")
+    niche = body.get("custom_niche") or body.get("niche") or "general"
+    script: Optional[str] = body.get("script") or None
+    # If session_id provided, try to enrich with session context
+    video_description = "short-form viral video"
+    if session_id:
+        session = sessions.get(session_id)
+        if session:
+            video_description = session.get("description", video_description)
+            if not script:
+                script = session.get("script")
     try:
-        hooks = await generate_hooks(video_description, niche, script)
+        hooks = await generate_hooks(
+            f"A {niche} {video_description}",
+            niche,
+            script,
+        )
     except Exception as e:
         log.error(f"generate-hooks error: {e}")
         raise HTTPException(500, f"Hook generation failed: {e}")
-    session["hooks"] = hooks
-    session["niche"] = niche
+    # Update session if we have one
+    if session_id:
+        session = sessions.get(session_id)
+        if session:
+            session["hooks"] = hooks
+            session["niche"] = niche
     return {"hooks": hooks, "session_id": session_id}
 
 
