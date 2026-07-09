@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("member")
+  team      Team?    @relation(fields: [teamId], references: [id])
+  teamId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Team {
+  id          String       @id @default(uuid())
+  name        String
+  users       User[]
+  comparisons Comparison[]
+  createdAt   DateTime     @default(now())
+}
+
+model Comparison {
+  id           String       @id @default(uuid())
+  title        String
+  description  String?
+  team         Team         @relation(fields: [teamId], references: [id])
+  teamId       String
+  suppliers    Supplier[]
+  lineItems    LineItem[]
+  flags        Flag[]
+  statedTotals StatedTotal[]
+  status       String       @default("draft")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Supplier {
+  id           String       @id @default(uuid())
+  name         String
+  contactEmail String?
+  incoterm     String?
+  comparison   Comparison?  @relation(fields: [comparisonId], references: [id])
+  comparisonId String?
+  lineItems    LineItem[]
+  createdAt    DateTime     @default(now())
+}
+
+model LineItem {
+  id             String   @id @default(uuid())
+  comparison     Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId   String
+  supplier       Supplier?  @relation(fields: [supplierId], references: [id])
+  supplierId     String?
+  label          String
+  amountCents    Int
+  currency       String @default("EUR")
+  sourceFragment String?
+  location       String? // e.g. page/paragraph
+  confidence     Float   @default(0.9)
+  version        Int     @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Flag {
+  id           String     @id @default(uuid())
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  lineItem     LineItem?  @relation(fields: [lineItemId], references: [id])
+  lineItemId   String?
+  kind         String
+  message      String
+  createdAt    DateTime   @default(now())
+}
+
+model StatedTotal {
+  id           String     @id @default(uuid())
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  supplier     Supplier   @relation(fields: [supplierId], references: [id])
+  supplierId   String
+  amountCents  Int
+  currency     String @default("EUR")
+  sourceFragment String?
+  location       String?
+  confidence     Float   @default(0.9)
+  createdAt    DateTime   @default(now())
+}
+
+model SubmissionToken {
+  id           String     @id @default(uuid())
+  token        String     @unique
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  supplierName String?
+  expiresAt    DateTime?
+  used         Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+}
+
+model UploadedFile {
+  id         String   @id @default(uuid())
+  path       String
+  filename   String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  supplierId String
+  uploadedAt DateTime @default(now())
+
+model Offer {
+  id           String   @id @default(uuid())
+  supplier     Supplier @relation(fields: [supplierId], references: [id])
+  supplierId   String
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  file         UploadedFile? @relation(fields: [fileId], references: [id])
+  fileId       String?
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  lineItems    LineItem[]
+}
+}
+
+model RFQ {
+  id         String    @id @default(uuid())
+  title      String
+  description String?
+  creatorId  String?
+  team       Team?     @relation(fields: [teamId], references: [id])
+  teamId     String?
+  items      RFQItem[]
+  createdAt  DateTime  @default(now())
+}
+
+model RFQItem {
+  id         String  @id @default(uuid())
+  rfq        RFQ     @relation(fields: [rfqId], references: [id])
+  rfqId      String
+  label      String
+  quantity   Int?    @default(1)
+  unit       String? 
+  expectedAmountCents Int? 
+  createdAt  DateTime @default(now())
+}
+
+model Term {
+  id            String     @id @default(uuid())
+  comparison    Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId  String
+  supplierId    String?    
+  kind          String     // e.g., payment_term, warranty, sla, liability, termination
+  offer          Offer?     @relation(fields: [offerId], references: [id])
+  offerId        String?
+  key           String
+  value         String
+  sourceFragment String?
+  location      String?
+  confidence    Float      @default(0.6)
+  createdAt     DateTime   @default(now())
+}
+
+model Correction {
+  id            String   @id @default(uuid())
+  lineItem      LineItem @relation(fields: [lineItemId], references: [id])
+  lineItemId    String
+  userId        String?
+  oldAmountCents Int
+  newAmountCents Int
+  reason        String?
+  createdAt     DateTime @default(now())
+}
+
+model TCOConfig {
+  id            String     @id @default(uuid())
+  comparison    Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId  String     @unique
+  weightsJson   String     // JSON string of weights: {deliveryDaysCostCentsPerDay, incotermPenaltiesPercent, missingItemPenaltyCents, lowConfidencePercent}
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model TCOResult {
+  id           String   @id @default(uuid())
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  supplier     Supplier  @relation(fields: [supplierId], references: [id])
+  supplierId   String
+  totalCents   Int
+  breakdown    String   // JSON string with detailed breakdown
+  createdAt    DateTime @default(now())
+}
+
+model Approval {
+  id           String   @id @default(uuid())
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  initiatorId  String?
+  approverId   String?
+  status       String   @default("submitted") // submitted, approved, rejected
+  reason       String?
+  actions      ApprovalAction[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ApprovalAction {
+  id         String   @id @default(uuid())
+  approval   Approval @relation(fields: [approvalId], references: [id])
+  approvalId String
+  actorId    String?
+  action     String   // submit, approve, reject, comment
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model Award {
+  id            String     @id @default(uuid())
+  comparison    Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId  String
+  supplierId    String
+  reason        String?
+  awardedBy     String?
+  createdAt     DateTime   @default(now())
+}
+
+model SignedReport {
+  id           String   @id @default(uuid())
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  comparisonId String
+  path         String
+  hash         String
+  createdAt    DateTime @default(now())
+}
